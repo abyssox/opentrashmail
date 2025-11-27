@@ -1,3 +1,11 @@
+<?php
+$lines = isset($lines) && is_numeric($lines) ? (int) $lines : 100;
+$mailserverlogfile      = $mailserverlogfile      ?? '';
+$webservererrorlogfile  = $webservererrorlogfile  ?? '';
+$webserveraccesslogfile = $webserveraccesslogfile ?? '';
+$configfile             = $configfile             ?? '';
+?>
+
 <a href="#" hx-push-url="/logs/10" hx-get="/api/logs/10" <?= $lines==10?'disabled':'' ?> hx-target="#adminmain" role="button">Last 10 lines</a>
 <a href="#" hx-push-url="/logs/50" hx-get="/api/logs/50" <?= $lines==50?'disabled':'' ?> hx-target="#adminmain" role="button">Last 50 lines</a>
 <a href="#" hx-push-url="/logs/100" hx-get="/api/logs/100" <?= $lines==100?'disabled':'' ?> hx-target="#adminmain" role="button">Last 100 lines</a>

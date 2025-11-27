@@ -5,6 +5,9 @@
     <title>Password Form</title>
 </head>
 <body>
+<?php
+$error = $error ?? '';
+?>
     <h1>Enter Password</h1>
     <form action="/" method="POST">
         <label for="password">Password:</label>

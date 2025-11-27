@@ -1,38 +1,47 @@
+<?php
+$parsed      = $emaildata['parsed'] ?? [];
+$subject     = $parsed['subject'] ?? '';
+$htmlbody    = $parsed['htmlbody'] ?? '';
+$body        = $parsed['body'] ?? '';
+$rcpts       = isset($emaildata['rcpts']) && is_array($emaildata['rcpts']) ? $emaildata['rcpts'] : [];
+$attachments = isset($parsed['attachments']) && is_array($parsed['attachments']) ? $parsed['attachments'] : [];
+?>
+
 <nav aria-label="breadcrumb">
-  <ul>
-    <li><a href="/address/<?= $email ?>" hx-get="/api/address/<?= $email ?>" hx-target="#main"><?= escape($email) ?></a></li>
-    <li><?= escape($emaildata['parsed']['subject']) ?></li>
-  </ul>
+    <ul>
+        <li><a href="/address/<?= $email ?>" hx-get="/api/address/<?= $email ?>" hx-target="#main"><?= escape($email) ?></a></li>
+        <li><?= escape($subject) ?></li>
+    </ul>
 </nav>
 
 <article>
     <header>
-        <p>Subject: <?= escape($emaildata['parsed']['subject']) ?></p>
-        <p>Received: <span id="date2-<?= $mailid ?>"><script>document.getElementById('date2-<?= $mailid ?>').innerHTML = moment.unix(parseInt(<?=$mailid?>/1000)).format('<?= $dateformat; ?>');</script></span></p>
+        <p>Subject: <?= escape($subject) ?></p>
+        <p>Received: <span id="date2-<?= $mailid ?>"><script>document.getElementById('date2-<?= $mailid ?>').innerHTML = moment.unix(parseInt(<?= $mailid ?>/1000)).format('<?= $dateformat; ?>');</script></span></p>
 
         <p>
             Recipients:
-            <?php foreach ($emaildata['rcpts'] as $to) : ?>
+            <?php foreach ($rcpts as $to) : ?>
                 <small class="badge"><?= escape($to) ?></small>
             <?php endforeach; ?>
         </p>
     </header>
-    
+
     <div id="emailbody">
-        <?php if($emaildata['parsed']['htmlbody']): ?>
+        <?php if (!empty($htmlbody)) : ?>
             <a href="#" hx-confirm="Warning: HTML may contain tracking functionality or scripts. Do you want to proceed?" hx-get="/api/raw-html/<?= $email ?>/<?= $mailid ?>" hx-target="#emailbody" role="button" class="secondary outline">Render email in HTML</a>
         <?php endif; ?>
         <hr>
-        <pre><?= nl2br(escape($emaildata['parsed']['body'])) ?></pre>
+        <pre><?= nl2br(escape($body)) ?></pre>
     </div>
     <footer>
         Attachments
         <div>
-            <?php if (count($emaildata['parsed']['attachments']) == 0) : ?>
+            <?php if (count($attachments) === 0) : ?>
                 <small class="secondary">No attachments</small>
             <?php endif; ?>
             <ul>
-                <?php foreach ($emaildata['parsed']['attachments'] as $attachment) : ?>
+                <?php foreach ($attachments as $attachment) : ?>
                     <li>
                         <a target="_blank" href="/api/attachment/<?= $email ?>/<?= $attachment ?>"><?= escape($attachment) ?></a>
                     </li>
