@@ -20,8 +20,5 @@ RUN mkdir -p /run/nginx /var/log/nginx
 
 RUN sed -i 's/;catch_workers_output = yes/catch_workers_output = yes/' /usr/local/etc/php-fpm.d/www.conf
 
-VOLUME /var/www/opentrashmail/data
-VOLUME /var/www/opentrashmail/logs
-
 EXPOSE 80 25 465
 ENTRYPOINT ["/etc/start.sh"]
