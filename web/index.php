@@ -1,70 +1,77 @@
 <?php
+declare(strict_types=1);
+
 define('DS', DIRECTORY_SEPARATOR);
 define('ROOT', dirname(__FILE__));
 
-include_once(ROOT.DS.'inc'.DS.'OpenTrashmailBackend.class.php');
-include_once(ROOT.DS.'inc'.DS.'core.php');
+include_once(ROOT . DS . 'inc' . DS . 'OpenTrashmailBackend.class.php');
+include_once(ROOT . DS . 'inc' . DS . 'core.php');
 
-$url = array_filter(explode('/', ltrim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), '/')));
+$url = array_filter(explode('/',ltrim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH),'/')));
 
 $backend = new OpenTrashmailBackend($url);
 
 $settings = loadSettings();
 
-if ($settings['ALLOWED_IPS']) {
+if (!empty($settings['ALLOWED_IPS'])) {
     $ip = getUserIP();
-    if (!isIPInRange($ip, $settings['ALLOWED_IPS']))
+    if (!isIPInRange($ip, $settings['ALLOWED_IPS'])) {
         exit("Your IP ($ip) is not allowed to access this site.");
+    }
 }
 
-if ($settings['PASSWORD'] || $settings['ADMIN_PASSWORD']) // let's only start a session if we need one
+if (!empty($settings['PASSWORD']) || !empty($settings['ADMIN_PASSWORD'])) { // let's only start a session if we need one
     session_start();
+}
 
-if ($settings['PASSWORD']) //site requires a password
-{
+if (!empty($settings['PASSWORD'])) { // site requires a password
     $pw = $settings['PASSWORD'];
     $auth = false;
-    //first check for auth header or POST/GET variable
-    if (isset($_SERVER['HTTP_PWD']) && $_SERVER['HTTP_PWD'] == $pw)
+
+    // first check for auth header or POST/GET variable
+    if (isset($_SERVER['HTTP_PWD']) && $_SERVER['HTTP_PWD'] === $pw) {
         $auth = true;
-    else if (isset($_REQUEST['password']) && $_REQUEST['password'] == $pw)
+    } elseif (isset($_REQUEST['password']) && $_REQUEST['password'] === $pw) {
         $auth = true;
-    // if not, check for session
-    else if (isset($_SESSION['authenticated']) && $_SESSION['authenticated'] == true)
+    } // if not, check for session
+    elseif (!empty($_SESSION['authenticated']) && $_SESSION['authenticated'] === true) {
         $auth = true;
-    // if user sent a pw but it's wrong, show error
-    else if (($_REQUEST['password'] ?? null) != $settings['PASSWORD'])
+    } // if user sent a pw but it's wrong, show error
+    elseif (($_REQUEST['password'] ?? null) !== $settings['PASSWORD']) {
         exit($backend->renderTemplate('password.html', [
             'error' => 'Wrong password',
         ]));
+    }
 
-    if ($auth === true)
+    if ($auth === true) {
         $_SESSION['authenticated'] = true;
-    else
+    } else {
         exit($backend->renderTemplate('password.html'));
+    }
 }
 
 $hxRequest = $_SERVER['HTTP_HX_REQUEST'] ?? null;
 
-if ($hxRequest != 'true') {
-    if (count($url) == 0 || !file_exists(ROOT . DS . implode('/', $url))) {
-
+if ($hxRequest !== 'true') {
+    if (count($url) === 0 || !file_exists(ROOT . DS . implode('/', $url))) {
         // avoid undefined array key 0
         $firstSegment = $url[0] ?? null;
 
-        if ($firstSegment != 'api' && $firstSegment != 'rss' && $firstSegment != 'json')
+        if ($firstSegment !== 'api' && $firstSegment !== 'rss' && $firstSegment !== 'json') {
             exit($backend->renderTemplate('index.html', [
                 'url' => implode('/', $url),
                 'settings' => loadSettings(),
             ]));
+        }
     }
-} else if (count($url) == 1 && isset($url[0]) && $url[0] == 'api') {
+} elseif (count($url) === 1 && isset($url[0]) && $url[0] === 'api') {
     exit($backend->renderTemplate('intro.html'));
 }
 
 $answer = $backend->run();
 
-if ($answer === false)
+if ($answer === false) {
     return false;
-else
-    echo $answer;
+}
+
+echo $answer;
