@@ -1,0 +1,2 @@
+docker/rootfs/*.sh text eol=lf
+rootfs/*.sh       text eol=lf

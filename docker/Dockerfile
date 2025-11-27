@@ -1,6 +1,6 @@
 FROM alpine:3.18
 
-LABEL org.opencontainers.image.source = "https://github.com/HaschekSolutions/opentrashmail"
+LABEL org.opencontainers.image.source="https://github.com/HaschekSolutions/opentrashmail"
 
 RUN apk add --no-cache bash python3 py3-pip socat wget php-fileinfo php-session curl git php php-curl nginx php-openssl php-mbstring php-json php-gd php-dom php-fpm
 RUN pip3 install aiosmtpd
