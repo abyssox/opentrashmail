@@ -1,19 +1,22 @@
-#!/bin/bash
+#!/usr/bin/env bash
+set -euo pipefail
 
-echo 'Starting Open Trashmail'
+echo 'Starting OpenTrashmail'
 
 cd /var/www/opentrashmail
 
-echo ' [+] Starting php'
-php-fpm81
+echo ' [+] Starting php-fpm'
 
-if [[ ${SKIP_FILEPERMISSIONS:=false} != true ]]; then
-  chown -R nginx:nginx /var/www/
+php-fpm -D
+
+if [[ "${SKIP_FILEPERMISSIONS:-false}" != "true" ]]; then
+  echo ' [+] Fixing file permissions'
+  mkdir -p /var/www/opentrashmail/data /var/www/opentrashmail/logs
+  chown -R nginx:nginx /var/www
   chown -R nginx:nginx /var/www/opentrashmail/data
 fi
 
-
-echo ' [+] Starting nginx'
+echo ' [+] Starting webserver'
 
 mkdir -p /var/log/nginx/opentrashmail
 touch /var/log/nginx/opentrashmail/web.access.log
@@ -22,15 +25,12 @@ touch /var/log/nginx/opentrashmail/web.error.log
 mkdir -p /run/nginx
 nginx
 
-
 echo ' [+] Setting up config.ini'
-
-
 
 _buildConfig() {
     echo "[GENERAL]"
     echo "DOMAINS=${DOMAINS:-localhost}"
-    echo "URL=${URL:-http://localhost:8080}"
+    echo "URL=${URL:-http://localhost}"
     echo "PASSWORD=${PASSWORD:-}"
     echo "ALLOWED_IPS=${ALLOWED_IPS:-}"
     echo ""
@@ -60,6 +60,14 @@ _buildConfig() {
 }
 
 _buildConfig > /var/www/opentrashmail/config.ini
+chown nginx:nginx /var/www/opentrashmail/config.ini || true
 
 echo ' [+] Starting Mailserver'
-su - nginx -s /bin/ash -c 'cd /var/www/opentrashmail/python;python3 -u mailserver3.py >> /var/www/opentrashmail/logs/mailserver.log 2>&1 '
+
+mkdir -p /var/www/opentrashmail/logs
+chown -R nginx:nginx /var/www/opentrashmail/logs
+
+su - nginx -s /bin/ash -c '
+  cd /var/www/opentrashmail/python
+  /opt/pyenv/bin/python -u mailserver3.py >> /var/www/opentrashmail/logs/mailserver.log 2>&1
+'
