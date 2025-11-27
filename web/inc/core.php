@@ -2,8 +2,32 @@
 
 function getDirForEmail($email)
 {
-    return realpath(ROOT.DS.'..'.DS.'data'.DS.$email);
+    static $baseDir = null;
+    static $realBaseDir = null;
+
+    $email = strtolower((string) $email);
+
+    $email = str_replace(
+        ['../', '..\\', '/', '\\', "\0"],
+        '_',
+        $email
+    );
+
+    if ($baseDir === null) {
+        $baseDir = ROOT . DS . '..' . DS . 'data';
+        $realBaseDir = realpath($baseDir) ?: $baseDir;
+    }
+
+    $path = $baseDir . DS . $email;
+
+    $realPath = realpath($path);
+    if ($realPath !== false && strpos($realPath, rtrim($realBaseDir, DS) . DS) === 0) {
+        return $realPath;
+    }
+
+    return $path;
 }
+
 
 function startsWith($haystack, $needle)
 {
@@ -48,15 +72,15 @@ function getEmailsOfEmail($email,$includebody=false,$includeattachments=false)
         $emails = listEmailAdresses();
         if(count($emails)>0)
         {
-            foreach($emails as $email)
+            foreach($emails as $emailaddress)
             {
-                if ($handle = opendir(getDirForEmail($email))) {
+                if ($handle = opendir(getDirForEmail($emailaddress))) {
                     while (false !== ($entry = readdir($handle))) {
                         if (endsWith($entry,'.json')) {
                             $time = substr($entry,0,-5);
-                            $json = json_decode(file_get_contents(getDirForEmail($email).DS.$entry),true);
+                            $json = json_decode(file_get_contents(getDirForEmail($emailaddress).DS.$entry),true);
                             $o[$time] = array(
-                                'email'=>$email,'id'=>$time,
+                                'email'=>$emailaddress,'id'=>$time,
                                 'from'=>$json['parsed']['from'],
                                 'subject'=>$json['parsed']['subject'],
                                 'md5'=>md5($time.$json['raw']),
@@ -69,7 +93,7 @@ function getEmailsOfEmail($email,$includebody=false,$includeattachments=false)
                                 $o[$time]['attachments'] = $json['parsed']['attachments'];
                                 //add url to attachments
                                 foreach($o[$time]['attachments'] as $k=>$v)
-                                    $o[$time]['attachments'][$k] = $settings['URL'].'/api/attachment/'.$email.'/'. $v;
+                                    $o[$time]['attachments'][$k] = $settings['URL'].'/api/attachment/'.$emailaddress.'/'. $v;
                             }
                         }
                     }
@@ -216,21 +240,14 @@ function getUserIP()
     return $ip;
 }
 
-/**
- * Check if a given IPv4 or IPv6 is in a network
- * @param  string $ip    IP to check in IPV4 format eg. 127.0.0.1
- * @param  string $range IP/CIDR netmask eg. 127.0.0.0/24, or 2001:db8::8a2e:370:7334/128
- * @return boolean true if the ip is in this range / false if not.
- * via https://stackoverflow.com/a/56050595/1174516
- */
 function isIPInRange( $ip, $range ) {
 
     if(strpos($range,',')!==false)
     {
         // we got a list of ranges. splitting
         $ranges = array_map('trim',explode(',',$range));
-        foreach($ranges as $range)
-            if(isIPInRange($ip,$range)) return true;
+        foreach($ranges as $singlerange)
+            if(isIPInRange($ip,$singlerange)) return true;
         return false;
     }
     // Get mask bits
@@ -344,10 +361,8 @@ function saveWebhookConfig($email, $config)
         return false;
     }
 
-    if (!is_dir($dir)) {
-        if (!mkdir($dir, 0755, true)) {
-            return false;
-        }
+    if (!is_dir($dir) && !mkdir($dir, 0755, true)) {
+        return false;
     }
     $webhookFile = $dir.DS.'webhook.json';
     return file_put_contents($webhookFile, json_encode($config, JSON_PRETTY_PRINT)) !== false;
