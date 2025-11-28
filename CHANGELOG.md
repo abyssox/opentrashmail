@@ -1,5 +1,17 @@
 # Changelog
 
+## V1.6.0
+- PHP upgraded to 8.4
+- New docker base image php:8.4-fpm-alpine
+- Code refactored in nearly every area
+- Path traversal security vulnerabilities fixed in mailserver3.py
+- Dependencies updated
+    - updated Pico to 2.1.1
+    - updated htmx to 2.0.7
+    - updated PrismJS to 1.30.0
+    - updated Font Awesome to 7.1.0
+    - updated Moment.js to 2.30.1
+
 ## V1.5.0
 - Added per-email webhook configuration with customizable JSON payloads
 - Implemented webhook retry mechanism with exponential backoff
