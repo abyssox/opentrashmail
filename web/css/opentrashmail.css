@@ -33,6 +33,11 @@ tr.htmx-swapping td {
     vertical-align: middle;
 }
 
+.credits {
+    font-size: 0.9em;
+    color: #777;
+}
+
 /* pico css overrides */
 
 :root {

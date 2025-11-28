@@ -3,24 +3,29 @@
  <img height=200px src="https://raw.githubusercontent.com/HaschekSolutions/opentrashmail/master/web/imgs/logo-200.png" alt="Open Trashmail"></a>
 </p>
 
-<h1 align="center">Open Trashmail</h1>
+<h1 align="center">OpenTrashmail</h1>
 
-
+<p align="center">
+  <sub>
+    This repository is a private fork of
+    <a href="https://github.com/HaschekSolutions/opentrashmail">HaschekSolutions/opentrashmail</a>.<br>
+    Huge thanks and credit to the original author and contributors for creating and sharing such a great tool!
+  </sub>
+</p>
 
 <div align="center">
   
-![](https://img.shields.io/badge/php-8.1%2B-brightgreen.svg)
+![](https://img.shields.io/badge/php-8.4%2B-brightgreen.svg)
 ![](https://img.shields.io/badge/python-3.11-brightgreen.svg)
 ![](https://img.shields.io/badge/made%20with-htmx-brightgreen.svg)
-![](https://img.shields.io/docker/image-size/hascheksolutions/opentrashmail/latest?logo=Docker&color=brightgreen)
-[![](https://img.shields.io/docker/pulls/hascheksolutions/opentrashmail?color=brightgreen)](https://hub.docker.com/r/hascheksolutions/opentrashmail)
-[![](https://github.com/hascheksolutions/opentrashmail/actions/workflows/build-docker.yml/badge.svg?color=brightgreen)](https://github.com/HaschekSolutions/opentrashmail/actions)
-[![Apache License](https://img.shields.io/badge/license-Apache-blue.svg?style=flat)](https://github.com/HaschekSolutions/opentrashmail/blob/master/LICENSE)
-[![Hits](https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fgithub.com%2FHaschekSolutions%2Fopentrashmail&count_bg=%2379C83D&title_bg=%23555555&icon=&icon_color=%23E7E7E7&title=hits&edge_flat=false)](https://hits.seeyoufarm.com)
-[![](https://img.shields.io/github/stars/HaschekSolutions/opentrashmail.svg?label=Stars&style=social)](https://github.com/HaschekSolutions/opentrashmail)
+![](https://img.shields.io/docker/image-size/abyssox/opentrashmail/latest?logo=Docker&color=brightgreen)
+[![](https://img.shields.io/docker/pulls/abyssox/opentrashmail?color=brightgreen)](https://hub.docker.com/r/abyssox/opentrashmail)
+[![](https://github.com/abyssox/opentrashmail/actions/workflows/build-docker.yml/badge.svg?color=brightgreen)](https://github.com/abyssox/opentrashmail/actions)
+[![Apache License](https://img.shields.io/badge/license-Apache-blue.svg?style=flat)](https://github.com/abyssox/opentrashmail/blob/master/LICENSE)
+[![Hits](https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fgithub.com%2abyssox%2Fopentrashmail&count_bg=%2379C83D&title_bg=%23555555&icon=&icon_color=%23E7E7E7&title=hits&edge_flat=false)](https://hits.seeyoufarm.com)
+[![](https://img.shields.io/github/stars/abyssox/opentrashmail.svg?label=Stars&style=social)](https://github.com/abyssox/opentrashmail)
 
 #### Selfhosted `trashmail` solution - Receive Emails via `Web UI`, `JSON API`, `RSS feed` and `Custom Webhooks`
-  
 </div>
 
 
