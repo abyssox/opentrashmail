@@ -3,69 +3,65 @@ set -euo pipefail
 
 echo 'Starting OpenTrashmail'
 
-cd /var/www/opentrashmail
+APP_DIR=/var/www/opentrashmail
+LOG_DIR="$APP_DIR/logs"
+DATA_DIR="$APP_DIR/data"
+NGINX_LOG_DIR=/var/log/nginx/opentrashmail
+CONFIG_FILE="$APP_DIR/config.ini"
 
-echo ' [+] Starting php-fpm'
+cd "$APP_DIR"
 
-php-fpm -D
+echo ' [+] Setting up config.ini'
+
+cat > "$CONFIG_FILE" <<EOF
+[GENERAL]
+DOMAINS=${DOMAINS:-localhost}
+URL=${URL:-http://localhost}
+PASSWORD=${PASSWORD:-}
+ALLOWED_IPS=${ALLOWED_IPS:-}
+
+[MAILSERVER]
+MAILPORT=${MAILPORT:-25}
+DISCARD_UNKNOWN=${DISCARD_UNKNOWN:-true}
+ATTACHMENTS_MAX_SIZE=${ATTACHMENTS_MAX_SIZE:-0}
+MAILPORT_TLS=${MAILPORT_TLS:-0}
+TLS_CERTIFICATE=${TLS_CERTIFICATE:-}
+TLS_PRIVATE_KEY=${TLS_PRIVATE_KEY:-0}
+
+[DATETIME]
+DATEFORMAT=${DATEFORMAT:-D.M.YYYY HH:mm}
+
+[CLEANUP]
+DELETE_OLDER_THAN_DAYS=${DELETE_OLDER_THAN_DAYS:-false}
+
+[WEBHOOK]
+WEBHOOK_URL=${WEBHOOK_URL:-}
+
+[ADMIN]
+ADMIN_ENABLED=${ADMIN_ENABLED:-}
+ADMIN_PASSWORD=${ADMIN_PASSWORD:-}
+SHOW_ACCOUNT_LIST=${SHOW_ACCOUNT_LIST:-false}
+ADMIN=${ADMIN:-}
+SHOW_LOGS=${SHOW_LOGS:-false}
+EOF
 
 if [[ "${SKIP_FILEPERMISSIONS:-false}" != "true" ]]; then
   echo ' [+] Fixing file permissions'
-  mkdir -p /var/www/opentrashmail/data /var/www/opentrashmail/logs
-  chown -R nginx:nginx /var/www
-  chown -R nginx:nginx /var/www/opentrashmail/data
+  mkdir -p "$DATA_DIR" "$LOG_DIR"
+  chown -R nginx:nginx "$DATA_DIR" "$LOG_DIR" "$CONFIG_FILE"
 fi
 
-echo ' [+] Starting webserver'
+echo ' [+] Starting php-fpm'
+php-fpm -D
 
-mkdir -p /var/log/nginx/opentrashmail
-touch /var/log/nginx/opentrashmail/web.access.log
-touch /var/log/nginx/opentrashmail/web.error.log
+echo ' [+] Starting webserver'
+mkdir -p "$NGINX_LOG_DIR"
+touch "$NGINX_LOG_DIR/web.access.log" "$NGINX_LOG_DIR/web.error.log"
 
 mkdir -p /run/nginx
 nginx
 
-echo ' [+] Setting up config.ini'
-
-_buildConfig() {
-    echo "[GENERAL]"
-    echo "DOMAINS=${DOMAINS:-localhost}"
-    echo "URL=${URL:-http://localhost}"
-    echo "PASSWORD=${PASSWORD:-}"
-    echo "ALLOWED_IPS=${ALLOWED_IPS:-}"
-    echo ""
-    echo "[MAILSERVER]"
-    echo "MAILPORT=${MAILPORT:-25}"
-    echo "DISCARD_UNKNOWN=${DISCARD_UNKNOWN:-true}"
-    echo "ATTACHMENTS_MAX_SIZE=${ATTACHMENTS_MAX_SIZE:-0}"
-    echo "MAILPORT_TLS=${MAILPORT_TLS:-0}"
-    echo "TLS_CERTIFICATE=${TLS_CERTIFICATE:-}"
-    echo "TLS_PRIVATE_KEY=${TLS_PRIVATE_KEY:-0}"
-    echo ""
-    echo "[DATETIME]"
-    echo "DATEFORMAT=${DATEFORMAT:-D.M.YYYY HH:mm}"
-    echo ""
-    echo "[CLEANUP]"
-    echo "DELETE_OLDER_THAN_DAYS=${DELETE_OLDER_THAN_DAYS:-false}"
-    echo ""
-    echo "[WEBHOOK]"
-    echo "WEBHOOK_URL=${WEBHOOK_URL:-}"
-    echo ""
-    echo "[ADMIN]"
-    echo "ADMIN_ENABLED=${ADMIN_ENABLED:-}"
-    echo "ADMIN_PASSWORD=${ADMIN_PASSWORD:-}"
-    echo "SHOW_ACCOUNT_LIST=${SHOW_ACCOUNT_LIST:-false}"
-    echo "ADMIN=${ADMIN:-}"
-    echo "SHOW_LOGS=${SHOW_LOGS:-false}"
-}
-
-_buildConfig > /var/www/opentrashmail/config.ini
-chown nginx:nginx /var/www/opentrashmail/config.ini || true
-
 echo ' [+] Starting Mailserver'
-
-mkdir -p /var/www/opentrashmail/logs
-chown -R nginx:nginx /var/www/opentrashmail/logs
 
 su - nginx -s /bin/ash -c '
   cd /var/www/opentrashmail/python
