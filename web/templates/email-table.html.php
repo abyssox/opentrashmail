@@ -1,16 +1,14 @@
 <nav aria-label="breadcrumb">
     <ul>
         <li><?= escape($email) ?></li>
-        <li></li>
-        <li></li>
     </ul>
 </nav>
 
 <div>
-    <a role="button" class="outline" href="#" id="copyemailbtn" onclick="copyEmailToClipboard();return false;"><i class="far fa-clipboard"></i> Copy address to clipboard</a>
-    <a role="button" class="outline" href="/rss/<?= $email ?>" target="_blank"><i class="fas fa-rss"></i> RSS Feed</a>
-    <a role="button" class="outline" href="/json/<?= $email ?>" target="_blank"><i class="fas fa-file-code"></i> JSON API</a>
-    <a role="button" class="outline" href="#" onclick="openWebhookModal();return false;"><i class="fas fa-plug"></i> Configure Webhook</a>
+    <a role="button" class="outline" href="#" id="copyemailbtn" onclick="copyEmailToClipboard();return false;"><i class="fa-solid fa-clipboard"></i> Copy address to clipboard</a>
+    <a role="button" class="outline" href="/rss/<?= $email ?>" target="_blank"><i class="fa-solid fa-rss"></i> RSS Feed</a>
+    <a role="button" class="outline" href="/json/<?= $email ?>" target="_blank"><i class="fa-solid fa-file-code"></i> JSON API</a>
+    <a role="button" class="outline" href="#" onclick="openWebhookModal();return false;"><i class="fa-solid fa-plug"></i> Configure Webhook</a>
 </div>
 
 <table role="grid">
@@ -32,7 +30,7 @@
         </tr>
     <?php endif; ?>
 
-    <?php $i = 0; // initialize counter to avoid undefined variable warning ?>
+    <?php $i = 0;?>
 
     <?php foreach($emails as $unixtime => $ed): ?>
         <tr>
@@ -58,7 +56,7 @@
 <script>
     function copyEmailToClipboard(){
         navigator.clipboard.writeText("<?= $email ?>");
-        document.getElementById('copyemailbtn').innerHTML = '<i class="fas fa-check-circle" style="color: green;"></i> Copied!';
+        document.getElementById('copyemailbtn').innerHTML = '<i class="fa-solid fa-circle-check" style="color: green;"></i> Copied!';
     }
 </script>
 

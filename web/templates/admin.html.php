@@ -27,7 +27,7 @@ if ($reqPassword !== null && $reqPassword === $adminPassword) {
                    hx-get="/api/listaccounts"
                    hx-target="#adminmain"
                    hx-push-url="/listaccounts">
-                    <i class="fas fa-list"></i> List accounts
+                    <i class="fa-solid fa-list"></i> List accounts
                 </a>
             <?php endif; ?>
         </li>
@@ -37,7 +37,7 @@ if ($reqPassword !== null && $reqPassword === $adminPassword) {
                    hx-get="/api/logs"
                    hx-target="#adminmain"
                    hx-push-url="/logs">
-                    <i class="fas fa-list"></i> Show logs
+                    <i class="fa-solid fa-file-lines"></i> Show logs
                 </a>
             <?php endif; ?>
         </li>

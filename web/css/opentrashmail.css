@@ -34,8 +34,8 @@ tr.htmx-swapping td {
 /* pico css overrides */
 
 :root {
-    --form-element-spacing-vertical: 0.15rem;
-    --form-element-spacing-horizontal: 1rem;
+    --pico-form-element-spacing-vertical: 0.15rem;
+    --pico-form-element-spacing-horizontal: 1rem;
 }
 
 /** dynamic nav bar **/
@@ -92,24 +92,24 @@ tr.htmx-swapping td {
     display: flex;
   }
   
-  [role="tabs"] section {
-    display: flex;
-    flex-wrap: wrap;
-    width: 100%;
-  }
-  
-  [role="tabs"] figure {
-    flex-grow: 1;
-    width: 100%;
-    height: 100%;
-    display: none;
-  }
-  
-  [role="tabs"] [type="radio"]:checked + figure {
-    display: block;
-  }
-  
-  nav[role="tab-control"] label.active {
-    color: var(--primary);
-    cursor: pointer;
-  }
+[role="tabs"] section {
+display: flex;
+flex-wrap: wrap;
+width: 100%;
+}
+
+[role="tabs"] figure {
+flex-grow: 1;
+width: 100%;
+height: 100%;
+display: none;
+}
+
+[role="tabs"] [type="radio"]:checked + figure {
+display: block;
+}
+
+nav[role="tab-control"] label.active {
+color: var(--pico-primary);
+cursor: pointer;
+}

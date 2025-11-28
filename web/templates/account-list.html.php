@@ -4,7 +4,7 @@ $emails = isset($emails) && is_array($emails) ? $emails : [];
 
 <div>
     <a role="button" class="outline" href="/json/listaccounts" target="_blank">
-        <i class="fas fa-file-code"></i> JSON API
+        <i class="fa-solid fa-file-code"></i> JSON API
     </a>
 </div>
 
