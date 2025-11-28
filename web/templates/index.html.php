@@ -24,6 +24,11 @@ $adminEnabled  = isset($this->settings['ADMIN_ENABLED']) ? $this->settings['ADMI
     <?php if ($adminEnabled == true): ?>
         <a href="/admin" hx-get="/api/admin" hx-target="#main" hx-push-url="/admin"><i class="fa-solid fa-user-shield"></i> Admin</a>
     <?php endif; ?>
+
+    <a href="#" id="themeToggle" aria-label="Toggle Dark/Light Theme" title="Toggle Dark/Light Theme">
+        <i class="fa-solid fa-toggle-on"></i>
+    </a>
+
     <a href="javascript:void(0);" class="icon" onclick="navbarmanager()">
         <i class="fa-solid fa-bars"></i>
     </a>
