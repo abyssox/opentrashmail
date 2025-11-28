@@ -48,7 +48,8 @@ EOF
 if [[ "${SKIP_FILEPERMISSIONS:-false}" != "true" ]]; then
   echo ' [+] Fixing file permissions'
   mkdir -p "$DATA_DIR" "$LOG_DIR"
-  chown -R nginx:nginx "$DATA_DIR" "$LOG_DIR" "$CONFIG_FILE"
+  chown -R www-data:www-data "$DATA_DIR" "$LOG_DIR" "$CONFIG_FILE"
+  chmod -R u+rwX,go+rX "$APP_DIR"
 fi
 
 echo ' [+] Starting php-fpm'
@@ -63,7 +64,7 @@ nginx
 
 echo ' [+] Starting Mailserver'
 
-su - nginx -s /bin/ash -c '
+su - www-data -s /bin/ash -c '
   cd /var/www/opentrashmail/python
   /opt/pyenv/bin/python -u mailserver3.py >> /var/www/opentrashmail/logs/mailserver.log 2>&1
 '

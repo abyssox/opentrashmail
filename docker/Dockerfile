@@ -14,7 +14,9 @@ RUN set -eux; \
         aiosmtpd \
         aiohttp \
     \
-    && mkdir -p /var/www/opentrashmail /run/nginx /var/log/nginx \
+    && mkdir -p /var/www/opentrashmail/data /var/www/opentrashmail/logs /run/nginx /var/log/nginx \
+    && chown -R www-data:www-data /var/www/opentrashmail \
+    && chmod -R u+rwX,go+rX /var/www/opentrashmail \
     \
     && sed -i 's/;catch_workers_output = yes/catch_workers_output = yes/' /usr/local/etc/php-fpm.d/www.conf \
     \
