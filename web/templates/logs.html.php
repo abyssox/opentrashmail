@@ -31,7 +31,23 @@ $configfile             = $configfile             ?? '';
 
 <h2>Current config</h2>
 <div>
-    <pre><code class="language-ini"><?= file_exists($configfile)?file_get_contents($configfile):'- Config file not found -' ?></code><pre>
+    <?php
+    $configOutput = '- Config file not found -';
+
+    if (file_exists($configfile)) {
+        $raw = file_get_contents($configfile);
+
+        // mask ADMIN_PASSWORD
+        $configOutput = preg_replace(
+                '/^(\s*ADMIN_PASSWORD\s*=\s*).*/mi',
+                '$1********',
+                $raw
+        );
+    }
+    ?>
+    <pre><code class="language-ini"><?= $configOutput ?></code></pre>
 </div>
+
+
 
 <script src="/js/prism.js"></script>
