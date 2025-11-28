@@ -17,12 +17,12 @@
         <th scope="col">#</th>
         <th scope="col">Date</th>
         <th scope="col">From</th>
-        <?php if($isadmin==true): ?><th scope="col">To</th><?php endif; ?>
+        <?php if($isadmin): ?><th scope="col">To</th><?php endif; ?>
         <th scope="col">Subject</th>
         <th scope="col">Action</th>
     </tr>
     </thead>
-    <tbody>
+    <tbody id="email-rows">
 
     <?php if(count($emails)==0): ?>
         <tr>
@@ -34,10 +34,10 @@
 
     <?php foreach($emails as $unixtime => $ed): ?>
         <tr>
-            <th scope="row"><?= ++$i; ?></th>
-            <td id="date-td-<?= $i ?>"><script>document.getElementById('date-td-<?= $i ?>').innerHTML = moment.unix(parseInt(<?=$unixtime?>/1000)).format('<?= $dateformat; ?>');</script></td>
+            <th scope="row"><?= ++$i ?></th>
+            <td id="date-td-<?= $i ?>"><script>document.getElementById('date-td-<?= $i ?>').innerHTML = moment.unix(parseInt(<?=$unixtime?>/1000)).format('<?= $dateformat ?>');</script></td>
             <td><?= escape($ed['from']) ?></td>
-            <?php if($isadmin==true): ?><td><?= $ed['email'] ?></td><?php endif; ?>
+            <?php if($isadmin): ?><td><?= $ed['email'] ?></td><?php endif; ?>
             <td><?= escape($ed['subject']) ?></td>
             <td>
                 <?php if($isadmin==true): ?>
@@ -51,6 +51,14 @@
         </tr>
     <?php endforeach; ?>
 </table>
+
+<div id="email-poller"
+     hx-get="/api/address/<?= escape($email) ?>"
+     hx-trigger="load, every 15s"
+     hx-select="tbody#email-rows > tr"
+     hx-target="#email-rows"
+     hx-swap="innerHTML">
+</div>
 
 <script>history.pushState({urlpath:"/address/<?= $email ?>"}, "", "/address/<?= $email ?>");</script>
 <script>
@@ -117,7 +125,9 @@
 </dialog>
 
 <script>
-    let currentWebhookConfig = null;
+    if (typeof currentWebhookConfig === 'undefined') {
+        var currentWebhookConfig = null;
+    }
 
     async function openWebhookModal() {
         // Load current configuration
