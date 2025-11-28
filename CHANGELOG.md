@@ -1,11 +1,13 @@
 # Changelog
-## 1.6.2
+## 1.6.3
 - Masked ADMIN_PASSWORD on logs page
 - Added dark/light theme toggle
 
+## 1.6.2
+- Changed mailserver run user
+ 
 ## 1.6.1
 - Added Autocheck (checks for new mails every 15 seconds)
-- Changed mailserver run user
 
 ## V1.6.0
 - PHP upgraded to 8.4
