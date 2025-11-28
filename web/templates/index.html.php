@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="/css/pico.min.css">
     <link rel="stylesheet" href="/css/prism.css">
     <link rel="stylesheet" href="/css/opentrashmail.css">
-    <link rel="stylesheet" href="/css/all.min.css">
+    <link rel="stylesheet" href="/css/fontawesome.min.css">
     <title>Open Trashmail</title>
 </head>
 
