@@ -94,7 +94,7 @@ class OpenTrashmailBackend
                     return '403 Forbidden';
 
                 case 'admin':
-                    if ($this->settings['ADMIN_ENABLED'] === true) {
+                    if ($this->settings['ADMIN_ENABLED'] == true) {
                         return $this->renderTemplate('admin.html', [
                             'settings' => $this->settings,
                         ]);

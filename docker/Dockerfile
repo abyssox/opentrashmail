@@ -1,5 +1,7 @@
 FROM php:8.4-fpm-alpine
 
+LABEL org.opencontainers.image.source="https://github.com/abyssox/opentrashmail"
+
 RUN apk add --no-cache \
     bash python3 py3-pip socat wget curl git nginx
 

@@ -2,10 +2,10 @@
 declare(strict_types=1);
 
 define('DS', DIRECTORY_SEPARATOR);
-define('ROOT', dirname(__FILE__));
+define('ROOT', __DIR__);
 
-include_once(ROOT . DS . 'inc' . DS . 'OpenTrashmailBackend.class.php');
-include_once(ROOT . DS . 'inc' . DS . 'core.php');
+require_once(ROOT . DS . 'inc' . DS . 'OpenTrashmailBackend.class.php');
+require_once(ROOT . DS . 'inc' . DS . 'core.php');
 
 $url = array_filter(explode('/',ltrim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH),'/')));
 
@@ -25,25 +25,24 @@ if (!empty($settings['PASSWORD']) || !empty($settings['ADMIN_PASSWORD'])) { // l
 }
 
 if (!empty($settings['PASSWORD'])) { // site requires a password
-    $pw = $settings['PASSWORD'];
-    $auth = false;
+    $pw              = (string) $settings['PASSWORD'];
+    $auth            = false;
+    $requestPassword = array_key_exists('password', $_REQUEST) ? (string) $_REQUEST['password'] : null;
+    $headerPassword  = isset($_SERVER['HTTP_PWD']) ? (string) $_SERVER['HTTP_PWD'] : null;
 
-    // first check for auth header or POST/GET variable
-    if (isset($_SERVER['HTTP_PWD']) && $_SERVER['HTTP_PWD'] === $pw) {
+    if ($headerPassword !== null && hash_equals($pw, $headerPassword)) {
         $auth = true;
-    } elseif (isset($_REQUEST['password']) && $_REQUEST['password'] === $pw) {
+    } elseif ($requestPassword !== null && hash_equals($pw, $requestPassword)) {
         $auth = true;
-    } // if not, check for session
-    elseif (!empty($_SESSION['authenticated']) && $_SESSION['authenticated'] === true) {
+    } elseif (!empty($_SESSION['authenticated']) && $_SESSION['authenticated'] === true) {
         $auth = true;
-    } // if user sent a pw but it's wrong, show error
-    elseif (($_REQUEST['password'] ?? null) !== $settings['PASSWORD']) {
+    } elseif ($requestPassword !== null && !hash_equals($pw, $requestPassword)) {
         exit($backend->renderTemplate('password.html', [
             'error' => 'Wrong password',
         ]));
     }
 
-    if ($auth === true) {
+    if ($auth) {
         $_SESSION['authenticated'] = true;
     } else {
         exit($backend->renderTemplate('password.html'));
