@@ -9,7 +9,7 @@ services:
     environment:
       - URL=http://localhost:8080
       - DOMAINS=example.com
-      - DATEFORMAT=D.M.YYYY HH:mm
+      - DATEFORMAT=DD.MM.YYYY HH:mm
       - SKIP_FILEPERMISSIONS=true
       - DISCARD_UNKNOWN=false
       - SHOW_ACCOUNT_LIST=true

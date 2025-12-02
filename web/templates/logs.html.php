@@ -1,53 +1,90 @@
 <?php
-$lines = isset($lines) && is_numeric($lines) ? (int) $lines : 100;
-$mailserverlogfile      = $mailserverlogfile      ?? '';
-$webservererrorlogfile  = $webservererrorlogfile  ?? '';
+$lines = isset($lines) && is_numeric($lines) ? (int)$lines : 100;
+$mailserverlogfile = $mailserverlogfile ?? '';
+$webservererrorlogfile = $webservererrorlogfile ?? '';
 $webserveraccesslogfile = $webserveraccesslogfile ?? '';
-$configfile             = $configfile             ?? '';
+$configfile = $configfile ?? '';
+
+$lineOptions = [10, 50, 100, 200, 500];
 ?>
 
-<a href="#" hx-push-url="/logs/10" hx-get="/api/logs/10" <?= $lines==10?'disabled':'' ?> hx-target="#adminmain" role="button">Last 10 lines</a>
-<a href="#" hx-push-url="/logs/50" hx-get="/api/logs/50" <?= $lines==50?'disabled':'' ?> hx-target="#adminmain" role="button">Last 50 lines</a>
-<a href="#" hx-push-url="/logs/100" hx-get="/api/logs/100" <?= $lines==100?'disabled':'' ?> hx-target="#adminmain" role="button">Last 100 lines</a>
-<a href="#" hx-push-url="/logs/200" hx-get="/api/logs/200" <?= $lines==200?'disabled':'' ?> hx-target="#adminmain" role="button">Last 200 lines</a>
-<a href="#" hx-push-url="/logs/500" hx-get="/api/logs/500" <?= $lines==500?'disabled':'' ?> hx-target="#adminmain" role="button">Last 500 lines</a>
-
-<hr>
-
-<h2>Mailserver log</h2>
-<div>
-    <pre><code class="language-log"><?= file_exists($mailserverlogfile)?tailShell($mailserverlogfile, $lines):'- Mailserver log file not found -' ?></code><pre>
+<div class="uk-margin-small-bottom">
+    <div class="uk-button-group">
+        <?php foreach ($lineOptions as $opt): ?>
+            <?php $active = ($lines === $opt); ?>
+            <a href="#" hx-push-url="/logs/<?= $opt ?>" hx-get="/api/logs/<?= $opt ?>" hx-target="#adminmain"
+               class="uk-button uk-button-small <?= $active ? 'uk-button-primary uk-disabled' : 'uk-button-default' ?> otm-blue-hover"
+               <?php if ($active): ?>aria-disabled="true"<?php endif; ?>>
+                Last <?= $opt ?> lines
+            </a>
+        <?php endforeach; ?>
+    </div>
 </div>
 
-<h2>Webserver error log</h2>
-<div>
-    <pre><code class="language-log"><?= file_exists($webservererrorlogfile)?tailShell($webservererrorlogfile, $lines):'- Webserver error log file not found -' ?></code><pre>
+<!-- Mailserver Log -->
+<div class="uk-card uk-card-default uk-card-body uk-margin">
+    <h2 class="uk-card-title uk-margin-small-bottom">Mailserver log</h2>
+    <div class="uk-overflow-auto">
+        <pre class="uk-margin-remove uk-text-small">
+<code class="language-log">
+<?= file_exists($mailserverlogfile)
+        ? tailShell($mailserverlogfile, $lines)
+        : '- Mailserver log file not found -' ?>
+</code>
+        </pre>
+    </div>
 </div>
 
-<h2>Webserver access log</h2>
-<div>
-    <pre><code class="language-log"><?= file_exists($webserveraccesslogfile)?tailShell($webserveraccesslogfile, $lines):'- Webserver access log file not found -' ?></code><pre>
+<!-- Webserver Error Log -->
+<div class="uk-card uk-card-default uk-card-body uk-margin">
+    <h2 class="uk-card-title uk-margin-small-bottom">Webserver error log</h2>
+    <div class="uk-overflow-auto">
+        <pre class="uk-margin-remove uk-text-small">
+<code class="language-log">
+<?= file_exists($webservererrorlogfile)
+        ? tailShell($webservererrorlogfile, $lines)
+        : '- Webserver error log file not found -' ?>
+</code>
+        </pre>
+    </div>
 </div>
 
-<h2>Current config</h2>
-<div>
-    <?php
-    $configOutput = '- Config file not found -';
-
-    if (file_exists($configfile)) {
-        $raw = file_get_contents($configfile);
-
-        // mask ADMIN_PASSWORD
-        $configOutput = preg_replace(
-                '/^(\s*ADMIN_PASSWORD\s*=\s*).*/mi',
-                '$1********',
-                $raw
-        );
-    }
-    ?>
-    <pre><code class="language-ini"><?= $configOutput ?></code></pre>
+<!-- Webserver Access Log -->
+<div class="uk-card uk-card-default uk-card-body uk-margin">
+    <h2 class="uk-card-title uk-margin-small-bottom">Webserver access log</h2>
+    <div class="uk-overflow-auto">
+        <pre class="uk-margin-remove uk-text-small">
+<code class="language-log">
+<?= file_exists($webserveraccesslogfile)
+        ? tailShell($webserveraccesslogfile, $lines)
+        : '- Webserver access log file not found -' ?>
+</code>
+        </pre>
+    </div>
 </div>
 
+<!-- Current Config -->
+<div class="uk-card uk-card-default uk-card-body uk-margin">
+    <h2 class="uk-card-title uk-margin-small-bottom">Current config</h2>
+    <div class="uk-overflow-auto">
+        <?php
+        $configOutput = '- Config file not found -';
 
+        if (file_exists($configfile)) {
+            $raw = file_get_contents($configfile);
+            $configOutput = preg_replace(
+                    '/^(\s*ADMIN_PASSWORD\s*=\s*).*/mi',
+                    '$1********',
+                    $raw
+            );
+        }
+        ?>
+        <pre class="uk-margin-remove uk-text-small">
+<code class="language-ini">
+<?= $configOutput ?>
+</code>
+        </pre>
+    </div>
+</div>
 
 <script src="/js/prism.js"></script>

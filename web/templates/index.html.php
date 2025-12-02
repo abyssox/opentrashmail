@@ -4,43 +4,72 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="/css/pico.min.css">
+
+    <link rel="stylesheet" href="/css/uikit.min.css">
+    <link rel="stylesheet" href="/css/all.min.css">
     <link rel="stylesheet" href="/css/prism.css">
     <link rel="stylesheet" href="/css/opentrashmail.css">
-    <link rel="stylesheet" href="/css/all.min.css">
+
     <title>OpenTrashmail</title>
 </head>
 
 <body>
 <?php
-$currentUrl    = isset($url) ? $url : '';
-$adminEnabled  = isset($this->settings['ADMIN_ENABLED']) ? $this->settings['ADMIN_ENABLED'] : false;
+$currentUrl = isset($url) ? $url : '';
+$adminEnabled = isset($this->settings['ADMIN_ENABLED']) ? $this->settings['ADMIN_ENABLED'] : false;
 ?>
 
-<div class="topnav" id="OTMTopnav">
-    <a href="/"><img src="/imgs/logo-50.png" width="50px" /> OpenTrashmail <small class="version"><?= getVersion() ?></small></a>
-    <a><input id="email" hx-post="/api/address" hx-target="#main" name="email" type="email" style="margin-bottom:0px" hx-trigger="input changed delay:500ms" placeholder="email address" aria-label="email address"></a>
-    <a href="/random" hx-get="/api/random" hx-target="#main"><i class="fa-solid fa-shuffle"></i> Generate random</a>
-    <?php if ($adminEnabled == true): ?>
-        <a href="/admin" hx-get="/api/admin" hx-target="#main" hx-push-url="/admin"><i class="fa-solid fa-user-shield"></i> Admin</a>
-    <?php endif; ?>
+<!-- Navbar -->
+<nav class="uk-navbar-container">
+    <div class="uk-container">
 
-    <a href="#" id="themeToggle" aria-label="Toggle Dark/Light Theme" title="Toggle Dark/Light Theme">
-        <i class="fa-solid fa-toggle-on"></i>
-    </a>
+        <div class="otm-nav">
+            <a href="/" class="otm-brand">
+                <img src="/imgs/logo-50.png" width="50" alt="OpenTrashmail Logo">
+                <span class="otm-brand-text">
+                    OpenTrashmail
+                    <small class="version"><?= getVersion() ?></small>
+                </span>
+            </a>
 
-    <a href="javascript:void(0);" class="icon" onclick="navbarmanager()">
-        <i class="fa-solid fa-bars"></i>
-    </a>
-</div>
+            <form class="otm-search" onsubmit="return false;" autocomplete="off" data-bwignore="true"
+                  data-1p-ignore="true" data-lpignore="true">
+                <input id="email" name="email" type="email" class="uk-input" hx-post="/api/address"
+                       hx-target="#main" hx-trigger="input changed delay:500ms" autocomplete="off" inputmode="email"
+                       placeholder="email address" aria-label="email address">
+            </form>
 
-<button class="htmx-indicator" aria-busy="true">Loading…</button>
 
-<main id="main" class="container" hx-get="/api/<?= $currentUrl ?>" hx-trigger="load"></main>
+            <div class="otm-links">
+                <a href="/random" hx-get="/api/random" hx-target="#main" class="otm-link">
+                    <i class="fa-solid fa-shuffle"></i>
+                    <span class="uk-margin-small-left">Generate random</span>
+                </a>
 
-<script src="/js/opentrashmail.js"></script>
+                <?php if ($adminEnabled == true): ?>
+                    <a href="/admin" hx-get="/api/admin" hx-target="#main" hx-push-url="/admin" class="otm-link">
+                        <i class="fa-solid fa-user-shield"></i>
+                        <span class="uk-margin-small-left">Admin</span>
+                    </a>
+                <?php endif; ?>
+
+                <a href="#" id="themeToggle" aria-label="Toggle Dark/Light Theme"
+                   title="Toggle Dark/Light Theme" class="otm-link">
+                    <i class="fa-solid fa-toggle-on"></i>
+                </a>
+            </div>
+        </div>
+
+    </div>
+</nav>
+
+<button class="htmx-indicator uk-button uk-button-default" aria-busy="true">Loading…</button>
+<main id="main" class="uk-container" hx-get="/api/<?= $currentUrl ?>" hx-trigger="load"></main>
+
+<script src="/js/uikit.min.js"></script>
 <script src="/js/htmx.min.js"></script>
 <script src="/js/moment-with-locales.min.js"></script>
-</body>
+<script src="/js/opentrashmail.js"></script>
 
+</body>
 </html>
