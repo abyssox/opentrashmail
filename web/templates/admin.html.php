@@ -1,7 +1,12 @@
 <?php
 $reqPassword = $_REQUEST['password'] ?? null;
+$adminEnabled = $settings['ADMIN_ENABLED'] ?? false;
 $adminPassword = $settings['ADMIN_PASSWORD'] ?? '';
 $error = '';
+
+if (!$adminEnabled) {
+    return;
+}
 
 if ($reqPassword !== null) {
     if ($adminPassword !== '' && hash_equals($adminPassword, (string)$reqPassword)) {
@@ -21,8 +26,8 @@ if ($reqPassword !== null) {
                 <h1 class="uk-card-title uk-text-center">Admin Login</h1>
 
                 <?php if (!empty($error)) : ?>
-                    <div class="uk-alert-danger" uk-alert>
-                        <a class="uk-alert-close" uk-close></a>
+                    <div class="uk-alert-danger">
+                        <a class="uk-alert-close"></a>
                         <p><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></p>
                     </div>
                 <?php endif; ?>
