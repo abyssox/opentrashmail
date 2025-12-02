@@ -14,174 +14,173 @@ class OpenTrashmailBackend
 
     public function run()
     {
-        $segment0 = $this->url[0] ?? null;
+        $segment0      = $this->url[0] ?? null;
         $adminPassword = $this->settings['ADMIN_PASSWORD'] ?? '';
 
-        // api calls
-        if ($segment0 === 'api') {
-            // avoid undefined index for action
-            $action = $this->url[1] ?? null;
+        $getEmail = fn(int $segmentIndex = 2) =>
+        ($_REQUEST['email'] ?? null) ?: ($this->url[$segmentIndex] ?? null);
 
-            switch ($action) {
-                case 'address':
-                    // $_REQUEST['email'] may be undefined
-                    $email = ($_REQUEST['email'] ?? null) ?: ($this->url[2] ?? null);
-                    return $this->listAccount($email);
+        $getId = fn(int $segmentIndex = 3) =>
+        ($_REQUEST['id'] ?? null) ?: ($this->url[$segmentIndex] ?? null);
 
-                case 'read':
-                    $email = ($_REQUEST['email'] ?? null) ?: ($this->url[2] ?? null);
-                    $id    = ($_REQUEST['id'] ?? null) ?: ($this->url[3] ?? null);
-                    return $this->readMail($email, $id);
+        $canSeeAccountList = function () use ($adminPassword) {
+            return !empty($this->settings['SHOW_ACCOUNT_LIST']) &&
+                (($adminPassword !== '' && !empty($_SESSION['admin'])) || $adminPassword === '');
+        };
 
-                case 'listaccounts':
+        $canSeeLogs = function () use ($adminPassword) {
+            return !empty($this->settings['SHOW_LOGS']) &&
+                (($adminPassword !== '' && !empty($_SESSION['admin'])) || $adminPassword === '');
+        };
 
-                    if (
-                        $this->settings['SHOW_ACCOUNT_LIST'] &&
-                        (
-                            ($adminPassword !== '' && !empty($_SESSION['admin'])) ||
-                            $adminPassword === ''
-                        )
-                    ) {
-                        return $this->listAccounts();
-                    }
-                    return '403 Forbidden';
+        switch ($segment0) {
 
-                case 'raw-html':
-                    $email = $this->url[2] ?? null;
-                    $id    = $this->url[3] ?? null;
-                    return $this->getRawMail($email, $id, true);
+            /* API */
+            case 'api':
+                $action = $this->url[1] ?? null;
 
-                case 'raw':
-                    $email = $this->url[2] ?? null;
-                    $id    = $this->url[3] ?? null;
-                    return $this->getRawMail($email, $id);
+                switch ($action) {
+                    case 'address':
+                        return $this->listAccount($getEmail());
 
-                case 'attachment':
-                    $email      = $this->url[2] ?? null;
-                    $attachment = $this->url[3] ?? null;
-                    return $this->getAttachment($email, $attachment);
+                    case 'read':
+                        return $this->readMail($getEmail(), $getId());
 
-                case 'delete':
-                    $email = ($_REQUEST['email'] ?? null) ?: ($this->url[2] ?? null);
-                    $id    = ($_REQUEST['id'] ?? null) ?: ($this->url[3] ?? null);
-                    return $this->deleteMail($email, $id);
+                    case 'listaccounts':
+                        if ($canSeeAccountList()) {
+                            return $this->listAccounts();
+                        }
+                        return '403 Forbidden';
 
-                case 'random':
-                    $addr = generateRandomEmail();
-                    return $this->listAccount($addr);
+                    case 'raw-html':
+                        return $this->getRawMail($this->url[2] ?? null, $this->url[3] ?? null, true);
 
-                case 'deleteaccount':
-                    $email = ($_REQUEST['email'] ?? null) ?: ($this->url[2] ?? null);
-                    return $this->deleteAccount($email);
+                    case 'raw':
+                        return $this->getRawMail($this->url[2] ?? null, $this->url[3] ?? null);
 
-                case 'logs':
-                    if (
-                        $this->settings['SHOW_LOGS'] &&
-                        (
-                            ($adminPassword !== '' && !empty($_SESSION['admin'])) ||
-                            $adminPassword === ''
-                        )
-                    ) {
-                        $linesParam = $this->url[2] ?? null;
-                        return $this->renderTemplate('logs.html', [
-                            'lines'                 => (is_numeric($linesParam) && $linesParam > 0) ? $linesParam : 100,
-                            'mailserverlogfile'     => ROOT . DS . '../logs' . DS . 'mailserver.log',
-                            'webservererrorlogfile' => ROOT . DS . '../logs' . DS . 'web.error.log',
-                            'webserveraccesslogfile'=> ROOT . DS . '../logs' . DS . 'web.access.log',
-                            'configfile'            => ROOT . DS . '../config.ini',
-                        ]);
-                    }
-                    return '403 Forbidden';
+                    case 'attachment':
+                        return $this->getAttachment($this->url[2] ?? null, $this->url[3] ?? null);
 
-                case 'admin':
-                    if ($this->settings['ADMIN_ENABLED'] == true) {
-                        return $this->renderTemplate('admin.html', [
-                            'settings' => $this->settings,
-                        ]);
-                    }
-                    return '403 Not activated in config.ini';
+                    case 'delete':
+                        return $this->deleteMail($getEmail(), $getId());
 
-                case 'webhook':
-                    $webhookAction = $this->url[2] ?? null;
-                    if ($webhookAction === 'get') {
-                        $email = ($_REQUEST['email'] ?? null) ?: ($this->url[3] ?? null);
-                        return $this->getWebhook($email);
-                    }
+                    case 'random':
+                        return $this->listAccount(generateRandomEmail());
 
-                    if ($webhookAction === 'save') {
-                        $email = ($_REQUEST['email'] ?? null) ?: ($this->url[3] ?? null);
-                        return $this->saveWebhook($email, $_REQUEST);
-                    }
+                    case 'deleteaccount':
+                        return $this->deleteAccount($getEmail());
 
-                    if ($webhookAction === 'delete') {
-                        $email = ($_REQUEST['email'] ?? null) ?: ($this->url[3] ?? null);
-                        return $this->deleteWebhook($email);
-                    }
-                    break;
+                    case 'logs':
+                        if ($canSeeLogs()) {
+                            $linesParam = $this->url[2] ?? null;
+                            $lines = (is_numeric($linesParam) && $linesParam > 0) ? (int) $linesParam : 100;
 
-                default:
-                    return false;
-            }
-        }
+                            $logDir = ROOT . DS . '../logs' . DS;
 
-        // rss feed
-        if ($segment0 === 'rss') {
-            header("Content-Type: application/rss+xml; charset=UTF8");
-            $email = $this->url[1] ?? null;
-            if (!$email || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
-                http_response_code(404);
-                exit('Error: Email not found');
-            }
-            return $this->renderTemplate('rss.xml', [
-                'email'    => $email,
-                'emaildata'=> getEmailsOfEmail($email),
-                'url'      => $this->settings['URL'],
-            ]);
-        }
+                            return $this->renderTemplate('logs.html', [
+                                'lines'                  => $lines,
+                                'mailserverlogfile'      => $logDir . 'mailserver.log',
+                                'webservererrorlogfile'  => $logDir . 'web.error.log',
+                                'webserveraccesslogfile' => $logDir . 'web.access.log',
+                                'configfile'             => ROOT . DS . '../config.ini',
+                            ]);
+                        }
+                        return '403 Forbidden';
 
-        // json api
-        if ($segment0 === 'json') {
-            header("Content-Type: application/json; charset=UTF8");
-            $jsonAction = $this->url[1] ?? null;
+                    case 'admin':
+                        if (!empty($this->settings['ADMIN_ENABLED'])) {
+                            return $this->renderTemplate('admin.html', [
+                                'settings' => $this->settings,
+                            ]);
+                        }
+                        return '403 Not activated in config.ini';
 
-            if ($jsonAction === 'listaccounts') {
-                $requestPassword = $_REQUEST['password'] ?? '';
-                if (
-                    $this->settings['SHOW_ACCOUNT_LIST'] &&
-                    (
-                        ($adminPassword !== "" && ($requestPassword === $adminPassword)) ||
-                        $adminPassword === ''
-                    )
-                ) {
-                    return json_encode(listEmailAddresses());
+                    case 'webhook':
+                        $webhookAction = $this->url[2] ?? null;
+                        $email         = $getEmail(3);
+
+                        if ($email === null) {
+                            http_response_code(400);
+                            return '400 Bad Request: missing email';
+                        }
+
+                        return match ($webhookAction) {
+                            'get' => $this->getWebhook($email),
+                            'save' => $this->saveWebhook($email, $_REQUEST),
+                            'delete' => $this->deleteWebhook($email),
+                            default => '404 Not Found',
+                        };
+
+                    default:
+                        return false;
                 }
-                exit(json_encode(['error' => '403 Forbidden']));
-            }
 
-            $email = $this->url[1] ?? null;
-            if (!$email || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
-                http_response_code(404);
-                exit(json_encode(['error' => 'Email not found']));
-            }
+            /* RSS */
+            case 'rss':
+                header('Content-Type: application/rss+xml; charset=UTF-8');
 
-            $id = $this->url[2] ?? null;
-            if ($id) { // user wants a specific email ID
-                if (!emailIDExists($email, $id)) {
+                $email = $this->url[1] ?? null;
+                if (!$email || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
                     http_response_code(404);
-                    exit(json_encode(['error' => 'Email ID not found']));
+                    exit('Error: Email not found');
                 }
 
-                if (!is_numeric($id)) {
-                    http_response_code(400);
-                    exit(json_encode(['error' => 'Invalid ID']));
-                }
-                return json_encode(getEmail($email, $id));
-            }
+                return $this->renderTemplate('rss.xml', [
+                    'email'     => $email,
+                    'emaildata' => getEmailsOfEmail($email),
+                    'url'       => $this->settings['URL'],
+                ]);
 
-            return json_encode(getEmailsOfEmail($email, true, true));
+            /* JSON API */
+            case 'json':
+                header('Content-Type: application/json; charset=UTF-8');
+
+                $jsonAction = $this->url[1] ?? null;
+
+                if ($jsonAction === 'listaccounts') {
+                    $requestPassword = $_REQUEST['password'] ?? '';
+
+                    if (
+                        !empty($this->settings['SHOW_ACCOUNT_LIST']) &&
+                        (
+                            ($adminPassword !== '' && $requestPassword === $adminPassword) ||
+                            $adminPassword === ''
+                        )
+                    ) {
+                        return json_encode(listEmailAddresses());
+                    }
+
+                    http_response_code(403);
+                    exit(json_encode(['error' => '403 Forbidden']));
+                }
+
+                $email = $jsonAction;
+                if (!$email || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                    http_response_code(404);
+                    exit(json_encode(['error' => 'Email not found']));
+                }
+
+                $id = $this->url[2] ?? null;
+
+                if ($id !== null) {
+                    if (!emailIDExists($email, $id)) {
+                        http_response_code(404);
+                        exit(json_encode(['error' => 'Email ID not found']));
+                    }
+
+                    if (!is_numeric($id)) {
+                        http_response_code(400);
+                        exit(json_encode(['error' => 'Invalid ID']));
+                    }
+
+                    return json_encode(getEmail($email, $id));
+                }
+
+                return json_encode(getEmailsOfEmail($email, true, true));
+
+            default:
+                return false;
         }
-
-        return false;
     }
 
     public function deleteAccount($email): string
