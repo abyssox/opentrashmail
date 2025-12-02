@@ -1,4 +1,7 @@
 # Changelog
+## 1.7.0
+- Moved to UIkit 3.24.2 as CSS framework
+
 ## 1.6.3
 - Masked ADMIN_PASSWORD on logs page
 - Added dark/light theme toggle
