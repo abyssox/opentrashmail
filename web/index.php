@@ -1,8 +1,8 @@
 <?php
 declare(strict_types=1);
 
-define('DS', DIRECTORY_SEPARATOR);
-define('ROOT', __DIR__);
+const DS = DIRECTORY_SEPARATOR;
+const ROOT = __DIR__;
 
 require_once(ROOT . DS . 'inc' . DS . 'OpenTrashmailBackend.class.php');
 require_once(ROOT . DS . 'inc' . DS . 'core.php');
@@ -28,7 +28,7 @@ if (!empty($settings['PASSWORD'])) { // site requires a password
     $pw              = (string) $settings['PASSWORD'];
     $auth            = false;
     $requestPassword = array_key_exists('password', $_REQUEST) ? (string) $_REQUEST['password'] : null;
-    $headerPassword  = isset($_SERVER['HTTP_PWD']) ? (string) $_SERVER['HTTP_PWD'] : null;
+    $headerPassword  = $_SERVER['HTTP_PWD'] ?? null;
 
     if ($headerPassword !== null && hash_equals($pw, $headerPassword)) {
         $auth = true;
