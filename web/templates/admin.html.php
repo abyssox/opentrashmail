@@ -1,16 +1,33 @@
 <?php
-$reqPassword = $_REQUEST['password'] ?? null;
-$adminEnabled = $settings['ADMIN_ENABLED'] ?? false;
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    session_start();
+}
+
+$adminEnabled  = $settings['ADMIN_ENABLED']  ?? false;
 $adminPassword = $settings['ADMIN_PASSWORD'] ?? '';
-$error = '';
+$error         = '';
 
 if (!$adminEnabled) {
     return;
 }
 
-if ($reqPassword !== null) {
-    if ($adminPassword !== '' && hash_equals($adminPassword, (string)$reqPassword)) {
+if (empty($_SESSION['admin_csrf_token'])) {
+    $_SESSION['admin_csrf_token'] = bin2hex(random_bytes(32));
+}
+$csrfToken = $_SESSION['admin_csrf_token'];
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $reqPassword = $_POST['password']    ?? null;
+    $postedToken = $_POST['csrf_token']  ?? '';
+
+    if (empty($postedToken) || !hash_equals($csrfToken, $postedToken)) {
+        $error = 'Invalid or expired form token. Please try again.';
+
+        $_SESSION['admin_csrf_token'] = bin2hex(random_bytes(32));
+        $csrfToken = $_SESSION['admin_csrf_token'];
+    } else if ($adminPassword !== '' && hash_equals($adminPassword, (string)$reqPassword)) {
         $_SESSION['admin'] = true;
+        unset($_SESSION['admin_csrf_token']);
     } else {
         $error = 'Wrong password';
     }
@@ -32,18 +49,30 @@ if ($reqPassword !== null) {
                     </div>
                 <?php endif; ?>
 
-                <form method="post" hx-post="/api/admin" hx-target="#main" class="uk-form-stacked">
+                <form method="post"
+                      hx-post="/api/admin"
+                      hx-target="#main"
+                      class="uk-form-stacked">
+
+                    <input type="hidden"
+                           name="csrf_token"
+                           value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
 
                     <div class="uk-margin">
                         <label class="uk-form-label" for="admin-password">Password</label>
                         <div class="uk-form-controls">
-                            <input class="uk-input" type="password" id="admin-password" name="password"
-                                   placeholder="Password" required>
+                            <input class="uk-input"
+                                   type="password"
+                                   id="admin-password"
+                                   name="password"
+                                   placeholder="Password"
+                                   required>
                         </div>
                     </div>
 
                     <div class="uk-margin">
-                        <button type="submit" class="uk-button uk-button-primary uk-width-1-1">
+                        <button type="submit"
+                                class="uk-button uk-button-primary uk-width-1-1">
                             Login
                         </button>
                     </div>
