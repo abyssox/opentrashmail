@@ -6,7 +6,6 @@ echo 'Starting OpenTrashmail'
 APP_DIR=/var/www/opentrashmail
 LOG_DIR="$APP_DIR/logs"
 DATA_DIR="$APP_DIR/data"
-NGINX_LOG_DIR=/var/log/nginx/opentrashmail
 CONFIG_FILE="$APP_DIR/config.ini"
 
 cd "$APP_DIR"
@@ -31,9 +30,6 @@ TLS_PRIVATE_KEY=${TLS_PRIVATE_KEY:-0}
 [DATETIME]
 DATEFORMAT=${DATEFORMAT:-D.M.YYYY HH:mm}
 
-[CLEANUP]
-DELETE_OLDER_THAN_DAYS=${DELETE_OLDER_THAN_DAYS:-false}
-
 [WEBHOOK]
 WEBHOOK_URL=${WEBHOOK_URL:-}
 
@@ -52,12 +48,16 @@ if [[ "${SKIP_FILEPERMISSIONS:-false}" != "true" ]]; then
   chmod -R u+rwX,go+rX "$APP_DIR"
 fi
 
+echo ' [+] Starting crond'
+touch "$LOG_DIR/cleanup_maildir.log"
+crond -l 2
+
 echo ' [+] Starting php-fpm'
 php-fpm -D
 
 echo ' [+] Starting webserver'
-mkdir -p "$NGINX_LOG_DIR"
-touch "$NGINX_LOG_DIR/web.access.log" "$NGINX_LOG_DIR/web.error.log"
+mkdir -p "$LOG_DIR"
+touch "$LOG_DIR/web.access.log" "$LOG_DIR/web.error.log"
 
 mkdir -p /run/nginx
 nginx

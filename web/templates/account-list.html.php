@@ -32,22 +32,26 @@ $emails = isset($emails) && is_array($emails) ? $emails : [];
         <?php foreach ($emails as $email): ?>
             <tr>
                 <td>
-                    <a href="/address/<?= $email; ?>" hx-get="/api/address/<?= $email; ?>"
-                       hx-push-url="/address/<?= $email; ?>" hx-target="#main">
+                    <a href="/address/<?= $email; ?>"
+                       hx-get="/api/address/<?= $email; ?>"
+                       hx-push-url="/address/<?= $email; ?>"
+                       hx-target="#main">
                         <?= escape($email) ?>
                     </a>
                 </td>
                 <td><?= countEmailsOfAddress($email); ?></td>
                 <td>
                     <div class="otm-row-actions">
-                        <a href="/address/<?= $email; ?>" hx-get="/api/address/<?= $email; ?>"
-                           hx-push-url="/address/<?= $email; ?>" hx-target="#main"
+                        <a href="/address/<?= $email; ?>"
+                           hx-get="/api/address/<?= $email; ?>"
+                           hx-push-url="/address/<?= $email; ?>"
+                           hx-target="#main"
                            class="uk-button uk-button-primary uk-button-small">
                             Show
                         </a>
-                        <a href="#" hx-get="/api/deleteaccount/<?= $email ?>"
-                           hx-confirm="Are you sure to delete this account and all its emails?" hx-target="closest tr"
-                           hx-swap="outerHTML swap:1s" class="uk-button uk-button-danger uk-button-small">
+                        <a href="#"
+                           class="uk-button uk-button-danger uk-button-small otm-delete-btn"
+                           data-delete-url="/api/deleteaccount/<?= $email ?>">
                             Delete
                         </a>
                     </div>
@@ -57,3 +61,70 @@ $emails = isset($emails) && is_array($emails) ? $emails : [];
         </tbody>
     </table>
 </div>
+
+<div id="deleteConfirmModal" uk-modal>
+    <div class="uk-modal-dialog uk-modal-body">
+
+        <button class="uk-modal-close-default" type="button" uk-close></button>
+
+        <h3 class="uk-modal-title">Delete account</h3>
+        <p>Are you sure you want to delete this account and all its emails?</p>
+
+        <div class="uk-text-right">
+            <button class="uk-button uk-button-default uk-modal-close" type="button">
+                Cancel
+            </button>
+            <button id="deleteConfirmBtn" class="uk-button uk-button-danger" type="button">
+                Delete
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function () {
+        if (window.otmDeleteModalInitialized) return;
+        window.otmDeleteModalInitialized = true;
+
+        var modalEl    = document.getElementById('deleteConfirmModal');
+        var confirmBtn = document.getElementById('deleteConfirmBtn');
+
+        if (!modalEl || !confirmBtn || typeof UIkit === 'undefined') {
+            console.warn('Delete confirmation modal not initialized');
+            return;
+        }
+
+        var modal            = UIkit.modal(modalEl);
+        var pendingDeleteBtn = null;
+
+        document.addEventListener('click', function (e) {
+            var btn = e.target.closest('.otm-delete-btn');
+            if (!btn) return;
+
+            e.preventDefault();
+            pendingDeleteBtn = btn;
+            modal.show();
+        });
+
+        confirmBtn.addEventListener('click', function () {
+            if (!pendingDeleteBtn || typeof htmx === 'undefined') {
+                modal.hide();
+                return;
+            }
+
+            var url = pendingDeleteBtn.getAttribute('data-delete-url');
+            if (!url) {
+                modal.hide();
+                return;
+            }
+
+            var row = pendingDeleteBtn.closest('tr');
+            modal.hide();
+
+            htmx.ajax('GET', url, {
+                target: row,
+                swap: 'outerHTML swap:1s'
+            });
+        });
+    })();
+</script>

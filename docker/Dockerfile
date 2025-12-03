@@ -8,6 +8,7 @@ RUN set -eux; \
         python3 \
         py3-pip \
         nginx \
+        findutils \
     \
     && python3 -m venv /opt/pyenv \
     && /opt/pyenv/bin/pip install --no-cache-dir \
@@ -45,12 +46,17 @@ RUN set -eux; \
         echo 'pm.max_requests = 500'; \
         echo 'request_terminate_timeout = 60'; \
         echo 'clear_env = no'; \
-    } > /usr/local/etc/php-fpm.d/zz-opentrashmail.conf
+    } > /usr/local/etc/php-fpm.d/zz-opentrashmail.conf \
+    \
+    && echo '* * * * * /usr/local/bin/cleanup_maildir.sh' > /etc/crontabs/root
 
 ENV PATH="/opt/pyenv/bin:${PATH}"
 
 WORKDIR /var/www/opentrashmail
 COPY . .
+
+COPY docker/rootfs/cleanup_maildir.sh /usr/local/bin/cleanup_maildir.sh
+RUN chmod +x /usr/local/bin/cleanup_maildir.sh
 
 COPY docker/rootfs/start.sh /etc/start.sh
 RUN chmod +x /etc/start.sh

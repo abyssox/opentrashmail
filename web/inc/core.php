@@ -1,5 +1,21 @@
 <?php
 
+function ensureMailboxDir(string $email): ?string
+{
+    $dir = getDirForEmail($email);
+
+    if (is_dir($dir)) {
+        return $dir;
+    }
+
+    if (!mkdir($dir, 0770, true) && !is_dir($dir)) {
+        error_log(sprintf('[OpenTrashmail] Failed to create mailbox dir "%s"', $dir));
+        return null;
+    }
+
+    return $dir;
+}
+
 function getDirForEmail($email): string
 {
     static $baseDir = null;

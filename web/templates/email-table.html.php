@@ -1,8 +1,13 @@
 <nav aria-label="breadcrumb" class="uk-margin-small-bottom">
     <ul class="uk-breadcrumb">
-        <li>><span aria-current="page"><?= escape($email) ?></span></li>
+        <li><span aria-current="page"><?= escape($email) ?></span></li>
+
+        <?php if (!empty($expiresAt) && $expiresAt > time()): ?>
+            <li><span id="address-expiry" data-expires-at="<?= (int)$expiresAt ?>"></span></li>
+        <?php endif; ?>
     </ul>
 </nav>
+
 
 <div class="uk-margin-small-bottom uk-flex uk-flex-wrap uk-flex-left">
     <a href="#" id="copyemailbtn"
@@ -32,6 +37,7 @@
     </a>
 </div>
 
+
 <div class="uk-overflow-auto">
     <table class="uk-table uk-table-striped uk-table-hover uk-table-small uk-table-middle" role="grid">
         <thead>
@@ -50,7 +56,7 @@
         <?php if (count($emails) == 0): ?>
             <tr>
                 <td colspan="<?= $isadmin ? 6 : 5 ?>" class="uk-text-center">
-                    No emails received on this address (yet..)
+                    <span uk-spinner="ratio: 0.7" aria-label="Waiting for emails" role="status"></span>
                 </td>
             </tr>
         <?php endif; ?>
@@ -238,10 +244,48 @@
     </div>
 </div>
 
-<script>
-    history.pushState({urlpath:"/address/<?= $email ?>"}, "", "/address/<?= $email ?>");
+<?php if (isset($expiresAt) && is_int($expiresAt) && $expiresAt > time()): ?>
+    <script>
+        (function () {
+            const el = document.getElementById('address-expiry');
+            if (!el) return;
 
-    function copyEmailToClipboard(){
+            const expiresAtSeconds = parseInt(el.dataset.expiresAt, 10);
+            if (!expiresAtSeconds || Number.isNaN(expiresAtSeconds)) return;
+
+            const expiresAtMs = expiresAtSeconds * 1000;
+
+            function formatRemaining(ms) {
+                const totalSeconds = Math.max(0, Math.floor(ms / 1000));
+                const minutes = Math.floor(totalSeconds / 60);
+                const seconds = totalSeconds % 60;
+                return minutes + ':' + String(seconds).padStart(2, '0');
+            }
+
+            function tick() {
+                const now = Date.now();
+                const remaining = expiresAtMs - now;
+
+                if (remaining <= 0) {
+                    el.textContent = 'expired';
+                    el.classList.add('uk-text-danger');
+                    clearInterval(timer);
+
+                    return;
+                }
+                el.textContent = 'expires in ' + formatRemaining(remaining);
+            }
+
+            tick();
+            const timer = setInterval(tick, 1000);
+        })();
+    </script>
+<?php endif; ?>
+
+<script>
+    history.pushState({urlpath: "/address/<?= $email ?>"}, "", "/address/<?= $email ?>");
+
+    function copyEmailToClipboard() {
         navigator.clipboard.writeText("<?= $email ?>");
         document.getElementById('copyemailbtn').innerHTML =
             '<i class="fa-solid fa-circle-check" style="color: green;"></i> Copied!';
@@ -251,14 +295,14 @@
         if (window.otmDeleteModalInitialized) return;
         window.otmDeleteModalInitialized = true;
 
-        var modalEl    = document.getElementById('deleteConfirmModal');
+        var modalEl = document.getElementById('deleteConfirmModal');
         var confirmBtn = document.getElementById('deleteConfirmBtn');
         if (!modalEl || !confirmBtn || typeof UIkit === 'undefined') {
             console.warn('Delete confirmation modal not initialized');
             return;
         }
 
-        var modal            = UIkit.modal(modalEl);
+        var modal = UIkit.modal(modalEl);
         var pendingDeleteBtn = null;
 
         document.addEventListener('click', function (e) {

@@ -23,10 +23,8 @@ CONFIG_PATH = os.path.join(BASE_DIR, "config.ini")
 
 # globals for settings
 DISCARD_UNKNOWN: bool = False
-DELETE_OLDER_THAN_DAYS: float = 0.0
 ATTACHMENTS_MAX_SIZE: int = 0
 DOMAINS: list[str] = []
-LAST_CLEANUP: float = 0.0
 URL: str = ""
 MAILPORT_TLS: int = 0
 TLS_CERTIFICATE: str = ""
@@ -205,8 +203,6 @@ class CustomHandler:
                 json.dump(savedata, outfile, ensure_ascii=False)
 
             await self.send_to_webhook(em, savedata)
-
-        cleanup()
 
         return "250 OK"
 
@@ -426,46 +422,6 @@ class CustomHandler:
         return html_content
 
 
-def cleanup():
-    global LAST_CLEANUP
-    if not DELETE_OLDER_THAN_DAYS:
-        return
-    if time.time() - LAST_CLEANUP < 86400:  # max once per day
-        return
-
-    logger.info("Cleaning up old messages")
-    LAST_CLEANUP = time.time()
-
-    rootdir = DATA_DIR
-    max_age = DELETE_OLDER_THAN_DAYS * 86400
-
-    # Delete old message files
-    for subdir, dirs, files in os.walk(rootdir):
-        for file in files:
-            if file.endswith(".json"):
-                filepath = os.path.join(subdir, file)
-                try:
-                    file_modified = os.path.getmtime(filepath)
-                except OSError:
-                    continue
-                if time.time() - file_modified > max_age:
-                    try:
-                        os.remove(filepath)
-                        logger.info("Deleted file: %s", filepath)
-                    except OSError as e:
-                        logger.warning("Failed to delete file %s: %s", filepath, e)
-
-    # Delete empty immediate subdirectories
-    for entry in os.scandir(rootdir):
-        if entry.is_dir():
-            try:
-                if not os.listdir(entry.path):
-                    os.rmdir(entry.path)
-                    logger.info("Deleted folder: %s", entry.path)
-            except OSError:
-                pass
-
-
 async def run(port: int):
     if TLS_CERTIFICATE and TLS_PRIVATE_KEY:
         context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
@@ -555,20 +511,6 @@ if __name__ == "__main__":
         ATTACHMENTS_MAX_SIZE = int(
             Config.get("MAILSERVER", "ATTACHMENTS_MAX_SIZE", fallback="0")
         )
-
-        if Config.has_option("CLEANUP", "DELETE_OLDER_THAN_DAYS"):
-            raw_val = Config.get("CLEANUP", "DELETE_OLDER_THAN_DAYS").strip().lower()
-            try:
-                if raw_val in ["false", "off", "no", "none", "0", "0.0"]:
-                    DELETE_OLDER_THAN_DAYS = 0.0
-                else:
-                    DELETE_OLDER_THAN_DAYS = float(raw_val)
-            except ValueError:
-                logger.warning(
-                    "Invalid value for DELETE_OLDER_THAN_DAYS: %s. Defaulting to 0.",
-                    raw_val,
-                )
-                DELETE_OLDER_THAN_DAYS = 0.0
 
         MAILPORT_TLS = int(
             Config.get("MAILSERVER", "MAILPORT_TLS", fallback="0")

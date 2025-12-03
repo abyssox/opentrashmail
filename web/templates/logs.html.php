@@ -1,8 +1,9 @@
 <?php
 $lines = isset($lines) && is_numeric($lines) ? (int)$lines : 100;
-$mailserverlogfile = $mailserverlogfile ?? '';
-$webservererrorlogfile = $webservererrorlogfile ?? '';
-$webserveraccesslogfile = $webserveraccesslogfile ?? '';
+$mailserverlogfile ??= '';
+$webservererrorlogfile ??= '';
+$webserveraccesslogfile ??= '';
+$cleanupmaildirlogfile ??= '';
 $configfile = $configfile ?? '';
 
 $lineOptions = [10, 50, 100, 200, 500];
@@ -58,6 +59,20 @@ $lineOptions = [10, 50, 100, 200, 500];
 <?= file_exists($webserveraccesslogfile)
         ? tailShell($webserveraccesslogfile, $lines)
         : '- Webserver access log file not found -' ?>
+</code>
+        </pre>
+    </div>
+</div>
+
+<!-- Cleanup maildir Log -->
+<div class="uk-card uk-card-default uk-card-body uk-margin">
+    <h2 class="uk-card-title uk-margin-small-bottom">Cleanup maildir log</h2>
+    <div class="uk-overflow-auto">
+        <pre class="uk-margin-remove uk-text-small">
+<code class="language-log">
+<?= file_exists($cleanupmaildirlogfile)
+        ? tailShell($cleanupmaildirlogfile, $lines)
+        : '- Cleanup maildir log file not found -' ?>
 </code>
         </pre>
     </div>

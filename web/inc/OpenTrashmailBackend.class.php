@@ -82,6 +82,7 @@ class OpenTrashmailBackend
                                 'mailserverlogfile'      => $logDir . 'mailserver.log',
                                 'webservererrorlogfile'  => $logDir . 'web.error.log',
                                 'webserveraccesslogfile' => $logDir . 'web.access.log',
+                                'cleanupmaildirlogfile'  => $logDir . 'cleanup_maildir.log',
                                 'configfile'             => ROOT . DS . '../config.ini',
                             ]);
                         }
@@ -295,22 +296,28 @@ class OpenTrashmailBackend
 
     public function listAccount($email): string
     {
+        $email = trim((string) $email);
+
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            $safeEmail = htmlspecialchars((string)$email, ENT_QUOTES, 'UTF-8');
+            $safeEmail = htmlspecialchars($email, ENT_QUOTES, 'UTF-8');
             return '
-                <div class="uk-alert uk-alert-danger">
-                    <p>Invalid email address: ' . $safeEmail . '</p>
-                </div>
-            ';
+            <div class="uk-alert uk-alert-danger">
+                <p>Invalid email address: ' . $safeEmail . '</p>
+            </div>
+        ';
         }
 
-        $emails = getEmailsOfEmail($email);
+        $dir = ensureMailboxDir($email) ?? getDirForEmail($email);
+        $emails    = getEmailsOfEmail($email);
+        $createdAt = is_dir($dir) ? (filemtime($dir) ?: time()) : time();
+        $expiresAt = $createdAt + (15 * 60); // expire after 15 minutes
 
         return $this->renderTemplate('email-table.html', [
-            'isadmin'   => ($this->settings['ADMIN'] === $email),
-            'email'     => $email,
-            'emails'    => $emails,
-            'dateformat'=> $this->settings['DATEFORMAT'],
+            'isadmin'    => !empty($this->settings['ADMIN']) && $this->settings['ADMIN'] === $email,
+            'email'      => $email,
+            'emails'     => $emails,
+            'dateformat' => $this->settings['DATEFORMAT'],
+            'expiresAt'  => $expiresAt,
         ]);
     }
 
@@ -350,7 +357,6 @@ class OpenTrashmailBackend
 
         return json_encode($config ?: ['enabled' => false]);
     }
-
 
     public function saveWebhook(string $email, array $data): string
     {
