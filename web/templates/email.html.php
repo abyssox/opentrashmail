@@ -1,9 +1,9 @@
 <?php
-$parsed      = $emaildata['parsed'] ?? [];
-$subject     = $parsed['subject'] ?? '';
-$htmlbody    = $parsed['htmlbody'] ?? '';
-$body        = $parsed['body'] ?? '';
-$rcpts       = isset($emaildata['rcpts']) && is_array($emaildata['rcpts']) ? $emaildata['rcpts'] : [];
+$parsed = $emaildata['parsed'] ?? [];
+$subject = $parsed['subject'] ?? '';
+$htmlbody = $parsed['htmlbody'] ?? '';
+$body = $parsed['body'] ?? '';
+$rcpts = isset($emaildata['rcpts']) && is_array($emaildata['rcpts']) ? $emaildata['rcpts'] : [];
 $attachments = isset($parsed['attachments']) && is_array($parsed['attachments']) ? $parsed['attachments'] : [];
 ?>
 
@@ -21,7 +21,6 @@ $attachments = isset($parsed['attachments']) && is_array($parsed['attachments'])
 </nav>
 
 <div class="uk-grid-small" uk-grid>
-    <!-- Haupt-Mail-Ansicht -->
     <div class="uk-width-1-1@m">
         <article class="uk-card uk-card-default uk-card-body uk-margin-small-bottom">
 
@@ -54,13 +53,10 @@ $attachments = isset($parsed['attachments']) && is_array($parsed['attachments'])
 
             <div id="emailbody" class="uk-margin-top">
                 <?php if (!empty($htmlbody)) : ?>
-                    <a href="#"
-                       class="uk-button uk-button-secondary uk-button-small uk-margin-small-bottom"
-                       hx-confirm="Warning: HTML may contain tracking functionality or scripts. Do you want to proceed?"
-                       hx-get="/api/raw-html/<?= $email ?>/<?= $mailid ?>"
-                       hx-target="#emailbody">
+                    <button type="button" id="renderHtmlTrigger"
+                            class="uk-button uk-button-secondary uk-button-small uk-margin-small-bottom">
                         Render email in HTML
-                    </a>
+                    </button>
                 <?php endif; ?>
 
                 <hr class="uk-margin-small">
@@ -91,7 +87,6 @@ $attachments = isset($parsed['attachments']) && is_array($parsed['attachments'])
         </article>
     </div>
 
-    <!-- Raw-Email-Ansicht -->
     <div class="uk-width-1-1@m">
         <article class="uk-card uk-card-default uk-card-body uk-margin-small-top">
             <header class="uk-margin-small-bottom">
@@ -119,12 +114,63 @@ $attachments = isset($parsed['attachments']) && is_array($parsed['attachments'])
             </div>
         </article>
     </div>
+    <div id="htmlWarningModal" uk-modal>
+        <div class="uk-modal-dialog uk-modal-body">
+
+            <button class="uk-modal-close-default" type="button" uk-close></button>
+
+            <h3 class="uk-modal-title">Warning: Render HTML email</h3>
+            <div class="uk-alert-danger" uk-alert>
+                HTML emails may contain tracking pixels or scripts.
+                Do you still want to render the HTML version?
+            </div>
+
+            <div class="uk-text-right">
+                <button class="uk-button uk-button-default uk-modal-close" type="button">
+                    Cancel
+                </button>
+                <button id="htmlRenderConfirmBtn" class="uk-button uk-button-primary" type="button">
+                    Render HTML
+                </button>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 <script>
     history.pushState(
-        {email:"<?= $email ?>", id:"<?= $mailid ?>"},
+        {email: "<?= $email ?>", id: "<?= $mailid ?>"},
         "",
         "/read/<?= $email ?>/<?= $mailid ?>"
     );
+
+    (function () {
+        var trigger = document.getElementById('renderHtmlTrigger');
+        var modalEl = document.getElementById('htmlWarningModal');
+        var confirmEl = document.getElementById('htmlRenderConfirmBtn');
+
+        if (!trigger || !modalEl || !confirmEl || typeof UIkit === 'undefined' || typeof htmx === 'undefined') {
+            return;
+        }
+
+        var modal = UIkit.modal(modalEl);
+
+        trigger.addEventListener('click', function (e) {
+            e.preventDefault();
+            modal.show();
+        });
+
+        confirmEl.addEventListener('click', function () {
+            modal.hide();
+
+            var targetEl = document.getElementById('emailbody');
+            if (!targetEl) return;
+
+            htmx.ajax('GET', '/api/raw-html/<?= $email ?>/<?= $mailid ?>', {
+                target: targetEl,
+                swap: 'innerHTML'
+            });
+        });
+    })();
 </script>

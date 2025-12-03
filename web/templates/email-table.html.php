@@ -1,3 +1,4 @@
+<!-- Nav -->
 <nav aria-label="breadcrumb" class="uk-margin-small-bottom">
     <ul class="uk-breadcrumb">
         <li><span aria-current="page"><?= escape($email) ?></span></li>
@@ -8,7 +9,7 @@
     </ul>
 </nav>
 
-
+<!-- Toolbar -->
 <div class="uk-margin-small-bottom uk-flex uk-flex-wrap uk-flex-left">
     <a href="#" id="copyemailbtn"
        class="uk-button uk-button-default uk-margin-small-right uk-margin-small-bottom otm-blue-hover"
@@ -37,7 +38,7 @@
     </a>
 </div>
 
-
+<!-- Email Table  -->
 <div class="uk-overflow-auto">
     <table class="uk-table uk-table-striped uk-table-hover uk-table-small uk-table-middle" role="grid">
         <thead>
@@ -291,18 +292,19 @@
             '<i class="fa-solid fa-circle-check" style="color: green;"></i> Copied!';
     }
 
+    // Delete Email Modal
     (function () {
         if (window.otmDeleteModalInitialized) return;
         window.otmDeleteModalInitialized = true;
 
-        var modalEl = document.getElementById('deleteConfirmModal');
+        var modalEl   = document.getElementById('deleteConfirmModal');
         var confirmBtn = document.getElementById('deleteConfirmBtn');
         if (!modalEl || !confirmBtn || typeof UIkit === 'undefined') {
             console.warn('Delete confirmation modal not initialized');
             return;
         }
 
-        var modal = UIkit.modal(modalEl);
+        var modal            = UIkit.modal(modalEl);
         var pendingDeleteBtn = null;
 
         document.addEventListener('click', function (e) {
@@ -329,12 +331,73 @@
             var row = pendingDeleteBtn.closest('tr');
             modal.hide();
 
+            if (!row) {
+                return;
+            }
+
+            var tbody = row.closest('tbody');
+            if (tbody) {
+                var dataRows = tbody.querySelectorAll('tr:not(.otm-spinner-row)');
+                var isLastRow = dataRows.length === 1;
+
+                if (isLastRow && !tbody.querySelector('.otm-spinner-row')) {
+                    var spinnerRow = document.createElement('tr');
+                    spinnerRow.className = 'otm-spinner-row';
+                    spinnerRow.innerHTML =
+                        '<td colspan="<?= $isadmin ? 6 : 5 ?>" class="uk-text-center">' +
+                        '<span uk-spinner="ratio: 0.7" aria-label="Waiting for emails" role="status"></span>' +
+                        '</td>';
+
+                    tbody.appendChild(spinnerRow);
+
+                    if (window.UIkit && typeof UIkit.update === 'function') {
+                        UIkit.update(tbody);
+                    }
+                }
+            }
+
+            var previousId = row.id;
+            var tempId = previousId || ('otm-delete-' + Date.now());
+            if (!previousId) {
+                row.id = tempId;
+            }
+
             htmx.ajax('GET', url, {
-                target: row,
+                target: '#' + tempId,
                 swap: 'outerHTML swap:1s'
             });
         });
     })();
+
+    document.body.addEventListener('htmx:afterSwap', function (evt) {
+        var target = evt.detail && evt.detail.target;
+        if (!target) return;
+
+        if (!(target.matches && target.matches('tr'))) {
+            return;
+        }
+
+        var tbody = document.getElementById('email-rows');
+        if (!tbody) return;
+
+        var dataRows = tbody.querySelectorAll('tr:not(.otm-spinner-row)');
+        var spinnerRow = tbody.querySelector('.otm-spinner-row');
+
+        if (dataRows.length === 0 && !spinnerRow) {
+            var tr = document.createElement('tr');
+            tr.className = 'otm-spinner-row';
+            tr.innerHTML =
+                '<td colspan="<?= $isadmin ? 6 : 5 ?>" class="uk-text-center">' +
+                '<span uk-spinner="ratio: 0.7" aria-label="Waiting for emails" role="status"></span>' +
+                '</td>';
+
+            tbody.appendChild(tr);
+
+            if (window.UIkit && typeof UIkit.update === 'function') {
+                UIkit.update(tbody);
+            }
+        }
+    });
 
     if (typeof currentWebhookConfig === 'undefined') {
         var currentWebhookConfig = null;
