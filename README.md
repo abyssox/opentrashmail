@@ -143,25 +143,25 @@ Edit `config.ini` to configure the server. Available settings:
 
 When running via Docker, the following environment variables are supported:
 
-| ENV var                | Description                                                                                                        | Example values                                                                 |
-|------------------------|--------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------|
-| `URL`                  | URL of the web interface. Used by the API and RSS feed                                                            | `http://localhost:8080`                                                        |
-| `DISCARD_UNKNOWN`      | Whether to delete emails addressed to domains that are not configured                                             | `true`, `false`                                                                |
-| `DOMAINS`              | Whitelisted domains the server will listen for. If `DISCARD_UNKNOWN=false`, used only to generate random emails   | `example.com,example.org`                                                      |
-| `SHOW_ACCOUNT_LIST`    | If `true`, all accounts that received emails can be listed via API or web interface                               | `true`, `false`                                                                |
-| `ADMIN`                | If set to a valid email, entering it in API or web interface shows all emails of all accounts (catch-all)        | `test@test.com`                                                                |
-| `DATEFORMAT`           | Date format used in the web interface (see [moment.js](https://momentjs.com/))                                    | `"MMMM Do YYYY, h:mm:ss a"`                                                    |
-| `SKIP_FILEPERMISSIONS` | If `true`, won't fix file permissions for the data folder in the container (useful for local dev). Default `false` | `true`, `false`                                                                |
-| `PASSWORD`             | If configured, site and API require this password (form, GET/POST `password` or header `PWD`)                     | `your-strong-password`                                                         |
-| `ALLOWED_IPS`          | Comma-separated list of IPv4/IPv6 CIDR ranges allowed to use the web UI or API                                    | `192.168.5.0/24,2a02:ab:cd:ef::/60,172.16.0.0/16`                              |
-| `ATTACHMENTS_MAX_SIZE` | Max size per email attachment in bytes                                                                            | `2000000` (= 2MB)                                                              |
-| `MAILPORT_TLS`         | Port used for TLS on connect (TLSC). Requires `TLS_CERTIFICATE` and `TLS_PRIVATE_KEY`                             | `465`                                                                          |
-| `TLS_CERTIFICATE`      | Path to the certificate (chain). Relative to `/python` or absolute                                                | `/certs/cert.pem` or `cert.pem`                                               |
-| `TLS_PRIVATE_KEY`      | Path to the certificate's private key. Relative to `/python` or absolute                                          | `/certs/privkey.pem` or `key.pem`                                             |
-| `WEBHOOK_URL`          | Global webhook URL to receive email JSON payloads                                                                 | `https://example.com/webhook`                                                 |
-| `ADMIN_ENABLED`        | Enables the admin menu                                                                                            | `false`, `true`                                                                |
-| `ADMIN_PASSWORD`       | Password to protect the admin menu                                                                                | `123456`                                                                       |
-| `DELETE_OLDER_THAN_DAYS` | Automatically delete mails older than the given number of days                                                  | `90`                                                                           |
+| ENV var                | Description                                                                                                        | Example values                                    |
+|------------------------|--------------------------------------------------------------------------------------------------------------------|---------------------------------------------------|
+| `URL`                  | URL of the web interface. Used by the API and RSS feed                                                            | `http://localhost:8080`                           |
+| `DISCARD_UNKNOWN`      | Whether to delete emails addressed to domains that are not configured                                             | `true`, `false`                                   |
+| `DOMAINS`              | Whitelisted domains the server will listen for. If `DISCARD_UNKNOWN=false`, used only to generate random emails   | `example.com,example.org`                         |
+| `SHOW_ACCOUNT_LIST`    | If `true`, all accounts that received emails can be listed via API or web interface                               | `true`, `false`                                   |
+| `ADMIN`                | If set to a valid email, entering it in API or web interface shows all emails of all accounts (catch-all)        | `test@test.com`                                   |
+| `DATEFORMAT`           | Date format used in the web interface (see [moment.js](https://momentjs.com/))                                    | `"MMMM DD YYYY, h:mm:ss a"`                       |
+| `SKIP_FILEPERMISSIONS` | If `true`, won't fix file permissions for the data folder in the container (useful for local dev). Default `false` | `true`, `false`                                   |
+| `PASSWORD`             | If configured, site and API require this password (form, GET/POST `password` or header `PWD`)                     | `your-strong-password`                            |
+| `ALLOWED_IPS`          | Comma-separated list of IPv4/IPv6 CIDR ranges allowed to use the web UI or API                                    | `192.168.5.0/24,2a02:ab:cd:ef::/60,172.16.0.0/16` |
+| `ATTACHMENTS_MAX_SIZE` | Max size per email attachment in bytes                                                                            | `2000000` (= 2MB)                                 |
+| `MAILPORT_TLS`         | Port used for TLS on connect (TLSC). Requires `TLS_CERTIFICATE` and `TLS_PRIVATE_KEY`                             | `465`                                             |
+| `TLS_CERTIFICATE`      | Path to the certificate (chain). Relative to `/python` or absolute                                                | `/certs/cert.pem` or `cert.pem`                   |
+| `TLS_PRIVATE_KEY`      | Path to the certificate's private key. Relative to `/python` or absolute                                          | `/certs/privkey.pem` or `key.pem`                 |
+| `WEBHOOK_URL`          | Global webhook URL to receive email JSON payloads                                                                 | `https://example.com/webhook`                     |
+| `ADMIN_ENABLED`        | Enables the admin menu                                                                                            | `false`, `true`                                   |
+| `ADMIN_PASSWORD`       | Password to protect the admin menu                                                                                | `123456`                                          |
+| `DELETE_OLDER_THAN_DAYS` | Automatically delete mails older than the given number of days                                                  | `90`                                              |
 
 ---
 
@@ -262,7 +262,6 @@ docker run \
 - Persists data on host
 - Sets a domain for auto-generation of emails
 - Accepts only emails for configured domains
-- Cleans up mails older than 90 days
 - Auto restarts
 
 ```bash
@@ -270,7 +269,6 @@ docker run -d --restart=unless-stopped --name opentrashmail \
   -e "DOMAINS=mydomain.eu" \
   -e "DATEFORMAT=D.M.YYYY HH:mm" \
   -e "DISCARD_UNKNOWN=false" \
-  -e "DELETE_OLDER_THAN_DAYS=90" \
   -p 80:80 -p 25:25 \
   -v /path/on/host/where/to/save/data:/var/www/opentrashmail/data \
   abyssox/opentrashmail:latest
@@ -284,6 +282,7 @@ docker run -d --restart=unless-stopped --name opentrashmail \
     - [x] Storing received mails in JSON
     - [x] Storing file attachments
 - [x] Docker files and configs
+    - [x] Automatically expire email addresses after 15 Minutes and delete content of it
 - [x] Web interface
     - [x] Choose email
     - [x] Get random email address
@@ -300,7 +299,6 @@ docker run -d --restart=unless-stopped --name opentrashmail \
 - [x] Configurable settings
     - [x] Choose domains for random generation
     - [x] Choose if out-of-scope emails are discarded
-    - [x] Automated cleanup of old mails
     - [x] Optionally secure whole site with a password
     - [x] Optionally allow site to be seen only from specific IP ranges
     - [x] Honeypot mode where all emails are also saved for a catchall account (implemented with the `ADMIN` setting)

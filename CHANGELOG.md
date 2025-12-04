@@ -1,4 +1,11 @@
 # Changelog
+## 1.7.1
+- Added auto expire feature to email addresses (default: 15 minutes)
+- Added CSRF check to admin login
+- Added -plain, -html, -multipart, -attachment parameters to send.py
+- Added automatic cache busting for static assets
+- various code/styling improvements
+
 ## 1.7.0
 - Moved to UIkit 3.24.2 as CSS framework
 
