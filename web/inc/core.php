@@ -484,3 +484,18 @@ function deleteWebhookConfig($email): bool
     }
     return true;
 }
+
+function asset_url(string $path): string
+{
+    $webPath = '/' . ltrim($path, '/');
+
+    $filePath = ROOT . $webPath;
+
+    $version = is_file($filePath) ? filemtime($filePath) : null;
+
+    if ($version !== null) {
+        $webPath .= '?v=' . $version;
+    }
+
+    return htmlspecialchars($webPath, ENT_QUOTES, 'UTF-8');
+}

@@ -5,40 +5,43 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <link rel="stylesheet" href="/css/uikit.min.css">
-    <link rel="stylesheet" href="/css/all.min.css">
-    <link rel="stylesheet" href="/css/prism.css">
-    <link rel="stylesheet" href="/css/opentrashmail.css">
+    <link rel="stylesheet" href="<?= asset_url('css/uikit.min.css') ?>">
+    <link rel="stylesheet" href="<?= asset_url('css/all.min.css') ?>">
+    <link rel="stylesheet" href="<?= asset_url('css/prism.css') ?>">
+    <link rel="stylesheet" href="<?= asset_url('css/opentrashmail.css') ?>">
 
     <title>OpenTrashmail</title>
 </head>
 
 <body>
 <?php
-$currentUrl = isset($url) ? $url : '';
+$currentUrl   = isset($url) ? $url : '';
 $adminEnabled = isset($this->settings['ADMIN_ENABLED']) ? $this->settings['ADMIN_ENABLED'] : false;
 ?>
 
-<!-- Navbar -->
 <nav class="uk-navbar-container">
     <div class="uk-container">
 
         <div class="otm-nav">
             <a href="/" class="otm-brand">
-                <img src="/imgs/logo-50.png" width="50" alt="OpenTrashmail Logo">
+                <img src="<?= asset_url('imgs/logo-50.png') ?>" width="50" alt="OpenTrashmail Logo">
                 <span class="otm-brand-text">
                     OpenTrashmail
                     <small class="version"><?= getVersion() ?></small>
                 </span>
             </a>
 
-            <form class="otm-search" onsubmit="return false;" autocomplete="off" data-bwignore="true"
-                  data-1p-ignore="true" data-lpignore="true">
-                <input id="email" name="email" type="email" class="uk-input" hx-post="/api/address"
-                       hx-target="#main" hx-trigger="input changed delay:500ms" autocomplete="off" inputmode="email"
-                       placeholder="email address" aria-label="email address">
+            <form class="otm-search" onsubmit="return false;" autocomplete="off"
+                  data-bwignore="true" data-1p-ignore="true" data-lpignore="true">
+                <input id="email" name="email" type="email" class="uk-input"
+                       hx-post="/api/address"
+                       hx-target="#main"
+                       hx-trigger="input changed delay:500ms"
+                       autocomplete="off"
+                       inputmode="email"
+                       placeholder="email address"
+                       aria-label="email address">
             </form>
-
 
             <div class="otm-links">
                 <a href="/random" hx-get="/api/random" hx-target="#main" class="otm-link">
@@ -66,10 +69,10 @@ $adminEnabled = isset($this->settings['ADMIN_ENABLED']) ? $this->settings['ADMIN
 <button class="htmx-indicator uk-button uk-button-default" aria-busy="true">Loading…</button>
 <main id="main" class="uk-container" hx-get="/api/<?= $currentUrl ?>" hx-trigger="load"></main>
 
-<script src="/js/uikit.min.js"></script>
-<script src="/js/htmx.min.js"></script>
-<script src="/js/moment-with-locales.min.js"></script>
-<script src="/js/opentrashmail.js"></script>
+<script src="<?= asset_url('js/uikit.min.js') ?>"></script>
+<script src="<?= asset_url('js/htmx.min.js') ?>"></script>
+<script src="<?= asset_url('js/moment-with-locales.min.js') ?>"></script>
+<script src="<?= asset_url('js/opentrashmail.js') ?>"></script>
 
 </body>
 </html>
