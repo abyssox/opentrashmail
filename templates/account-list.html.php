@@ -1,4 +1,9 @@
 <?php
+declare(strict_types=1);
+
+use OpenTrashmail\Services\Mailbox;
+use OpenTrashmail\Utils\View;
+
 $emails = isset($emails) && is_array($emails) ? $emails : [];
 ?>
 
@@ -30,28 +35,29 @@ $emails = isset($emails) && is_array($emails) ? $emails : [];
         <?php endif; ?>
 
         <?php foreach ($emails as $email): ?>
+            <?php $safeEmail = View::escape($email); ?>
             <tr>
                 <td>
-                    <a href="/address/<?= $email; ?>"
-                       hx-get="/api/address/<?= $email; ?>"
-                       hx-push-url="/address/<?= $email; ?>"
+                    <a href="/address/<?= $safeEmail ?>"
+                       hx-get="/api/address/<?= $safeEmail ?>"
+                       hx-push-url="/address/<?= $safeEmail ?>"
                        hx-target="#main">
-                        <?= escape($email) ?>
+                        <?= $safeEmail ?>
                     </a>
                 </td>
-                <td><?= countEmailsOfAddress($email); ?></td>
+                <td><?= Mailbox::countEmailsOfAddress($email) ?></td>
                 <td>
                     <div class="otm-row-actions">
-                        <a href="/address/<?= $email; ?>"
-                           hx-get="/api/address/<?= $email; ?>"
-                           hx-push-url="/address/<?= $email; ?>"
+                        <a href="/address/<?= $safeEmail ?>"
+                           hx-get="/api/address/<?= $safeEmail ?>"
+                           hx-push-url="/address/<?= $safeEmail ?>"
                            hx-target="#main"
                            class="uk-button uk-button-primary uk-button-small">
                             Show
                         </a>
                         <a href="#"
                            class="uk-button uk-button-danger uk-button-small otm-delete-btn"
-                           data-delete-url="/api/deleteaccount/<?= $email ?>">
+                           data-delete-url="/api/deleteaccount/<?= $safeEmail ?>">
                             Delete
                         </a>
                     </div>

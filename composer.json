@@ -1,0 +1,14 @@
+{
+  "name": "abyssox/opentrashmail",
+  "description": "Self-hosted trashmail service",
+  "type": "project",
+  "require": {
+    "php": "^8.4",
+    "ext-fileinfo": "*"
+  },
+  "autoload": {
+    "psr-4": {
+      "OpenTrashmail\\": "src/"
+    }
+  }
+}

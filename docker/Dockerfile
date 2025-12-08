@@ -17,7 +17,6 @@ RUN set -eux; \
     \
     && mkdir -p /var/www/opentrashmail/data /var/www/opentrashmail/logs /run/nginx /var/log/nginx \
     && chown -R www-data:www-data /var/www/opentrashmail \
-    && chmod -R u+rwX,go+rX /var/www/opentrashmail \
     \
     && sed -i 's/;catch_workers_output = yes/catch_workers_output = yes/' /usr/local/etc/php-fpm.d/www.conf \
     \
@@ -26,8 +25,9 @@ RUN set -eux; \
         echo 'max_execution_time=60'; \
         echo 'max_input_vars=2000'; \
         echo 'log_errors=On'; \
-        echo 'error_reporting=E_ALL & ~E_DEPRECATED & ~E_STRICT'; \
+        echo 'error_reporting=E_ALL & ~E_DEPRECATED & ~E_USER_DEPRECATED & ~E_NOTICE & ~E_WARNING'; \
         echo 'display_errors=Off'; \
+        echo 'error_log=/var/www/opentrashmail/logs/php.error.log'; \
         echo 'opcache.enable=1'; \
         echo 'opcache.enable_cli=1'; \
         echo 'opcache.interned_strings_buffer=8'; \
@@ -50,10 +50,16 @@ RUN set -eux; \
     \
     && echo '* * * * * /usr/local/bin/cleanup_maildir.sh' > /etc/crontabs/root
 
-ENV PATH="/opt/pyenv/bin:${PATH}"
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+
+ENV PATH="${PATH}:/usr/local/bin:/opt/pyenv/bin"
 
 WORKDIR /var/www/opentrashmail
-COPY . .
+COPY --chown=www-data:www-data . .
+
+USER www-data
+RUN composer install --no-dev --prefer-dist --optimize-autoloader
+USER root
 
 COPY docker/rootfs/cleanup_maildir.sh /usr/local/bin/cleanup_maildir.sh
 RUN chmod +x /usr/local/bin/cleanup_maildir.sh

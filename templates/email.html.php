@@ -1,22 +1,39 @@
 <?php
-$parsed = $emaildata['parsed'] ?? [];
-$subject = $parsed['subject'] ?? '';
-$htmlbody = $parsed['htmlbody'] ?? '';
-$body = $parsed['body'] ?? '';
-$rcpts = isset($emaildata['rcpts']) && is_array($emaildata['rcpts']) ? $emaildata['rcpts'] : [];
+declare(strict_types=1);
+
+use OpenTrashmail\Utils\View;
+
+$parsed      = isset($emaildata['parsed']) && is_array($emaildata['parsed']) ? $emaildata['parsed'] : [];
+$subject     = (string)($parsed['subject']   ?? '');
+$htmlbody    = (string)($parsed['htmlbody']  ?? '');
+$body        = (string)($parsed['body']      ?? '');
+$rcpts       = isset($emaildata['rcpts']) && is_array($emaildata['rcpts']) ? $emaildata['rcpts'] : [];
 $attachments = isset($parsed['attachments']) && is_array($parsed['attachments']) ? $parsed['attachments'] : [];
+
+$email      = isset($email) ? (string)$email : '';
+$mailid     = isset($mailid) ? (string)$mailid : '';
+$dateformat = isset($dateformat) ? (string)$dateformat : 'YYYY-MM-DD HH:mm:ss';
+
+$emailEsc  = View::escape($email);
+$mailidEsc = View::escape($mailid);
+
+$dateformatJs = json_encode($dateformat, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+$emailJs      = json_encode($email, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+$mailidJs     = json_encode($mailid, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+
+$mailidNumeric = is_numeric($mailid) ? $mailid : '0';
 ?>
 
 <nav aria-label="breadcrumb" class="uk-margin-small-bottom">
     <ul class="uk-breadcrumb">
         <li>
-            <a href="/address/<?= $email ?>"
-               hx-get="/api/address/<?= $email ?>"
+            <a href="/address/<?= $emailEsc ?>"
+               hx-get="/api/address/<?= $emailEsc ?>"
                hx-target="#main">
-                <?= escape($email) ?>
+                <?= $emailEsc ?>
             </a>
         </li>
-        <li><span><?= escape($subject) ?></span></li>
+        <li><span><?= View::escape($subject) ?></span></li>
     </ul>
 </nav>
 
@@ -27,16 +44,22 @@ $attachments = isset($parsed['attachments']) && is_array($parsed['attachments'])
             <header class="uk-margin-small-bottom">
                 <p class="uk-margin-remove">
                     <span class="uk-text-bold">Subject:</span>
-                    <?= escape($subject) ?>
+                    <?= View::escape($subject) ?>
                 </p>
 
                 <p class="uk-margin-remove">
                     <span class="uk-text-bold">Received:</span>
-                    <span id="date2-<?= $mailid ?>"></span>
+                    <span id="date2-<?= $mailidEsc ?>"></span>
                 </p>
                 <script>
-                    document.getElementById('date2-<?= $mailid ?>').innerHTML =
-                        moment.unix(<?= $mailid ?> / 1000).format('<?= $dateformat; ?>');
+                    (function () {
+                        var el = document.getElementById('date2-<?= $mailidEsc ?>');
+                        if (!el || typeof moment === 'undefined') {
+                            return;
+                        }
+                        el.innerHTML = moment.unix(<?= $mailidNumeric ?> / 1000)
+                            .format(<?= $dateformatJs ?>);
+                    })();
                 </script>
 
                 <?php if (!empty($rcpts)) : ?>
@@ -44,15 +67,15 @@ $attachments = isset($parsed['attachments']) && is_array($parsed['attachments'])
                         <span class="uk-text-bold">Recipients:</span>
                         <?php foreach ($rcpts as $to) : ?>
                             <span class="uk-label uk-margin-small-left uk-margin-small-top">
-                    <?= escape($to) ?>
-                </span>
+                                <?= View::escape((string)$to) ?>
+                            </span>
                         <?php endforeach; ?>
                     </p>
                 <?php endif; ?>
             </header>
 
             <div id="emailbody" class="uk-margin-top">
-                <?php if (!empty($htmlbody)) : ?>
+                <?php if ($htmlbody !== '') : ?>
                     <button type="button" id="renderHtmlTrigger"
                             class="uk-button uk-button-secondary uk-button-small uk-margin-small-bottom">
                         Render email in HTML
@@ -62,7 +85,7 @@ $attachments = isset($parsed['attachments']) && is_array($parsed['attachments'])
                 <hr class="uk-margin-small">
 
                 <div class="uk-overflow-auto">
-                    <pre class="uk-text-small uk-text-break"><?= nl2br(escape($body)) ?></pre>
+                    <pre class="uk-text-small uk-text-break"><?= nl2br(View::escape($body)) ?></pre>
                 </div>
             </div>
 
@@ -74,10 +97,14 @@ $attachments = isset($parsed['attachments']) && is_array($parsed['attachments'])
                 <?php else : ?>
                     <ul class="uk-list uk-list-divider uk-margin-small-top">
                         <?php foreach ($attachments as $attachment) : ?>
+                            <?php
+                            $attachment = (string)$attachment;
+                            $attachmentHref = View::escape(rawurlencode($attachment));
+                            ?>
                             <li>
                                 <a target="_blank"
-                                   href="/api/attachment/<?= $email ?>/<?= $attachment ?>">
-                                    <?= escape($attachment) ?>
+                                   href="/api/attachment/<?= $emailEsc ?>/<?= $attachmentHref ?>">
+                                    <?= View::escape($attachment) ?>
                                 </a>
                             </li>
                         <?php endforeach; ?>
@@ -94,7 +121,7 @@ $attachments = isset($parsed['attachments']) && is_array($parsed['attachments'])
             </header>
 
             <p class="uk-margin-small-bottom otm-blue-hover">
-                <a href="/api/raw/<?= $email ?>/<?= $mailid ?>" target="_blank">
+                <a href="/api/raw/<?= $emailEsc ?>/<?= $mailidEsc ?>" target="_blank">
                     Open in new window
                 </a>
             </p>
@@ -102,18 +129,19 @@ $attachments = isset($parsed['attachments']) && is_array($parsed['attachments'])
             <div class="uk-overflow-auto">
                 <button
                         class="uk-button uk-button-default uk-button-small uk-margin-small-bottom otm-blue-hover"
-                        hx-get="/api/raw/<?= $email ?>/<?= $mailid ?>"
-                        hx-target="#raw-email-<?= $mailid ?>"
+                        hx-get="/api/raw/<?= $emailEsc ?>/<?= $mailidEsc ?>"
+                        hx-target="#raw-email-<?= $mailidEsc ?>"
                         hx-swap="innerHTML">
                     Load Raw Email
                 </button>
 
-                <pre id="raw-email-<?= $mailid ?>"
+                <pre id="raw-email-<?= $mailidEsc ?>"
                      class="uk-text-small uk-text-break uk-padding-small">
-            </pre>
+                </pre>
             </div>
         </article>
     </div>
+
     <div id="htmlWarningModal" uk-modal>
         <div class="uk-modal-dialog uk-modal-body">
 
@@ -139,15 +167,17 @@ $attachments = isset($parsed['attachments']) && is_array($parsed['attachments'])
 </div>
 
 <script>
-    history.pushState(
-        {email: "<?= $email ?>", id: "<?= $mailid ?>"},
-        "",
-        "/read/<?= $email ?>/<?= $mailid ?>"
-    );
-
     (function () {
-        var trigger = document.getElementById('renderHtmlTrigger');
-        var modalEl = document.getElementById('htmlWarningModal');
+        if (typeof history !== 'undefined') {
+            history.pushState(
+                {email: <?= $emailJs ?>, id: <?= $mailidJs ?>},
+                "",
+                "/read/" + <?= $emailJs ?> + "/" + <?= $mailidJs ?>
+            );
+        }
+
+        var trigger  = document.getElementById('renderHtmlTrigger');
+        var modalEl  = document.getElementById('htmlWarningModal');
         var confirmEl = document.getElementById('htmlRenderConfirmBtn');
 
         if (!trigger || !modalEl || !confirmEl || typeof UIkit === 'undefined' || typeof htmx === 'undefined') {
@@ -167,7 +197,7 @@ $attachments = isset($parsed['attachments']) && is_array($parsed['attachments'])
             var targetEl = document.getElementById('emailbody');
             if (!targetEl) return;
 
-            htmx.ajax('GET', '/api/raw-html/<?= $email ?>/<?= $mailid ?>', {
+            htmx.ajax('GET', '/api/raw-html/<?= $emailEsc ?>/<?= $mailidEsc ?>', {
                 target: targetEl,
                 swap: 'innerHTML'
             });

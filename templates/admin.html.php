@@ -1,10 +1,16 @@
 <?php
+declare(strict_types=1);
+
+use OpenTrashmail\Utils\View;
+
+$settings = isset($settings) && is_array($settings) ? $settings : [];
+
 if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
 }
 
-$adminEnabled  = $settings['ADMIN_ENABLED']  ?? false;
-$adminPassword = $settings['ADMIN_PASSWORD'] ?? '';
+$adminEnabled  = (bool)($settings['ADMIN_ENABLED']  ?? false);
+$adminPassword = (string)($settings['ADMIN_PASSWORD'] ?? '');
 $error         = '';
 
 if (!$adminEnabled) {
@@ -16,16 +22,15 @@ if (empty($_SESSION['admin_csrf_token'])) {
 }
 $csrfToken = $_SESSION['admin_csrf_token'];
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $reqPassword = $_POST['password']    ?? null;
-    $postedToken = $_POST['csrf_token']  ?? '';
+if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
+    $reqPassword = $_POST['password']   ?? null;
+    $postedToken = $_POST['csrf_token'] ?? '';
 
-    if (empty($postedToken) || !hash_equals($csrfToken, $postedToken)) {
+    if ($postedToken === '' || !hash_equals($csrfToken, $postedToken)) {
         $error = 'Invalid or expired form token. Please try again.';
-
         $_SESSION['admin_csrf_token'] = bin2hex(random_bytes(32));
         $csrfToken = $_SESSION['admin_csrf_token'];
-    } else if ($adminPassword !== '' && hash_equals($adminPassword, (string)$reqPassword)) {
+    } elseif ($adminPassword !== '' && hash_equals($adminPassword, (string)$reqPassword)) {
         $_SESSION['admin'] = true;
         unset($_SESSION['admin_csrf_token']);
     } else {
@@ -34,7 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 ?>
 
-<?php if ($adminPassword !== "" && empty($_SESSION['admin'])): ?>
+<?php if ($adminPassword !== '' && empty($_SESSION['admin'])): ?>
 
     <div class="uk-flex uk-flex-center">
         <div class="uk-width-medium">
@@ -42,10 +47,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <div class="uk-card uk-card-default uk-card-body uk-margin">
                 <h1 class="uk-card-title uk-text-center">Admin Login</h1>
 
-                <?php if (!empty($error)) : ?>
+                <?php if ($error !== ''): ?>
                     <div class="uk-alert-danger">
                         <a class="uk-alert-close"></a>
-                        <p><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></p>
+                        <p><?= View::escape($error) ?></p>
                     </div>
                 <?php endif; ?>
 
@@ -56,7 +61,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                     <input type="hidden"
                            name="csrf_token"
-                           value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
+                           value="<?= View::escape($csrfToken) ?>">
 
                     <div class="uk-margin">
                         <label class="uk-form-label" for="admin-password">Password</label>

@@ -1,10 +1,30 @@
+<?php
+declare(strict_types=1);
+
+use OpenTrashmail\Utils\View;
+
+$email      = isset($email) ? (string)$email : '';
+$isadmin    = !empty($isadmin);
+$emails     = isset($emails) && is_array($emails) ? $emails : [];
+$dateformat = isset($dateformat) ? (string)$dateformat : 'YYYY-MM-DD HH:mm:ss';
+$expiresAt  = isset($expiresAt) && is_int($expiresAt) ? $expiresAt : null;
+
+$emailEsc      = View::escape($email);
+$dateformatJs  = json_encode($dateformat, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+$emailJs       = json_encode($email, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+$colspanEmails = $isadmin ? 6 : 5;
+?>
+
 <!-- Nav -->
 <nav aria-label="breadcrumb" class="uk-margin-small-bottom">
     <ul class="uk-breadcrumb">
-        <li><span aria-current="page"><?= escape($email) ?></span></li>
+        <li><span aria-current="page"><?= $emailEsc ?></span></li>
 
         <?php if (!empty($expiresAt) && $expiresAt > time()): ?>
-            <li><span id="address-expiry" data-expires-at="<?= (int)$expiresAt ?>"></span></li>
+            <li>
+                <span id="address-expiry"
+                      data-expires-at="<?= (int)$expiresAt ?>"></span>
+            </li>
         <?php endif; ?>
     </ul>
 </nav>
@@ -18,13 +38,13 @@
         <span class="uk-margin-small-left">Copy address to clipboard</span>
     </a>
 
-    <a href="/rss/<?= $email ?>" target="_blank"
+    <a href="/rss/<?= $emailEsc ?>" target="_blank"
        class="uk-button uk-button-default uk-margin-small-right uk-margin-small-bottom otm-blue-hover">
         <i class="fa-solid fa-rss"></i>
         <span class="uk-margin-small-left">RSS Feed</span>
     </a>
 
-    <a href="/json/<?= $email ?>" target="_blank"
+    <a href="/json/<?= $emailEsc ?>" target="_blank"
        class="uk-button uk-button-default uk-margin-small-right uk-margin-small-bottom otm-blue-hover">
         <i class="fa-solid fa-file-code"></i>
         <span class="uk-margin-small-left">JSON API</span>
@@ -47,16 +67,17 @@
             <th scope="col">Date</th>
             <th scope="col">From</th>
             <?php if ($isadmin): ?>
-                <th scope="col">To</th><?php endif; ?>
+                <th scope="col">To</th>
+            <?php endif; ?>
             <th scope="col">Subject</th>
             <th scope="col" class="uk-table-shrink">Action</th>
         </tr>
         </thead>
         <tbody id="email-rows">
 
-        <?php if (count($emails) == 0): ?>
-            <tr>
-                <td colspan="<?= $isadmin ? 6 : 5 ?>" class="uk-text-center">
+        <?php if (count($emails) === 0): ?>
+            <tr class="otm-spinner-row">
+                <td colspan="<?= $colspanEmails ?>" class="uk-text-center">
                     <span uk-spinner="ratio: 0.7" aria-label="Waiting for emails" role="status"></span>
                 </td>
             </tr>
@@ -65,42 +86,57 @@
         <?php $i = 0; ?>
 
         <?php foreach ($emails as $unixtime => $ed): ?>
+            <?php
+            $i++;
+            $rowEmail   = isset($ed['email']) ? (string)$ed['email'] : $email;
+            $rowId      = isset($ed['id']) ? (string)$ed['id'] : '';
+            $rowEmailEsc = View::escape($rowEmail);
+            $rowIdEsc    = View::escape($rowId);
+            $fromEsc     = View::escape((string)($ed['from'] ?? ''));
+            $subjectEsc  = View::escape((string)($ed['subject'] ?? ''));
+            $tsNumeric   = is_numeric((string)$unixtime) ? (int)$unixtime : 0;
+            ?>
             <tr>
-                <th scope="row" class="otm-row-index"><?= ++$i ?></th>
+                <th scope="row" class="otm-row-index"><?= $i ?></th>
                 <td id="date-td-<?= $i ?>">
                     <script>
-                        document.getElementById('date-td-<?= $i ?>').innerHTML =
-                            moment.unix(parseInt(<?= $unixtime ?> / 1000)).format('<?= $dateformat ?>');
+                        (function () {
+                            var el = document.getElementById('date-td-<?= $i ?>');
+                            if (!el || typeof moment === 'undefined') return;
+                            el.innerHTML = moment.unix(<?= $tsNumeric ?> / 1000)
+                                .format(<?= $dateformatJs ?>);
+                        })();
                     </script>
                 </td>
-                <td><?= escape($ed['from']) ?></td>
+                <td><?= $fromEsc ?></td>
                 <?php if ($isadmin): ?>
-                    <td><?= $ed['email'] ?></td><?php endif; ?>
-                <td><?= escape($ed['subject']) ?></td>
+                    <td><?= $rowEmailEsc ?></td>
+                <?php endif; ?>
+                <td><?= $subjectEsc ?></td>
                 <td>
                     <div class="otm-row-actions">
-                        <?php if ($isadmin == true): ?>
-                            <a href="/read/<?= $ed['email'] ?>/<?= $ed['id'] ?>"
-                               hx-get="/api/read/<?= $ed['email'] ?>/<?= $ed['id'] ?>"
+                        <?php if ($isadmin): ?>
+                            <a href="/read/<?= $rowEmailEsc ?>/<?= $rowIdEsc ?>"
+                               hx-get="/api/read/<?= $rowEmailEsc ?>/<?= $rowIdEsc ?>"
                                hx-target="#main"
                                class="uk-button uk-button-primary uk-button-small">
                                 Open
                             </a>
                             <a href="#"
                                class="uk-button uk-button-danger uk-button-small otm-delete-btn"
-                               data-delete-url="/api/delete/<?= $ed['email'] ?>/<?= $ed['id'] ?>">
+                               data-delete-url="/api/delete/<?= $rowEmailEsc ?>/<?= $rowIdEsc ?>">
                                 Delete
                             </a>
                         <?php else: ?>
-                            <a href="/read/<?= $email ?>/<?= $ed['id'] ?>"
-                               hx-get="/api/read/<?= $email ?>/<?= $ed['id'] ?>"
+                            <a href="/read/<?= $emailEsc ?>/<?= $rowIdEsc ?>"
+                               hx-get="/api/read/<?= $emailEsc ?>/<?= $rowIdEsc ?>"
                                hx-target="#main"
                                class="uk-button uk-button-primary uk-button-small">
                                 Open
                             </a>
                             <a href="#"
                                class="uk-button uk-button-danger uk-button-small otm-delete-btn"
-                               data-delete-url="/api/delete/<?= $email ?>/<?= $ed['id'] ?>">
+                               data-delete-url="/api/delete/<?= $emailEsc ?>/<?= $rowIdEsc ?>">
                                 Delete
                             </a>
                         <?php endif; ?>
@@ -133,8 +169,12 @@
 </div>
 
 <!-- Email auto check -->
-<div id="email-poller" hx-get="/api/address/<?= escape($email) ?>" hx-trigger="load, every 15s"
-     hx-select="tbody#email-rows > tr" hx-target="#email-rows" hx-swap="innerHTML">
+<div id="email-poller"
+     hx-get="/api/address/<?= $emailEsc ?>"
+     hx-trigger="load, every 15s"
+     hx-select="tbody#email-rows > tr"
+     hx-target="#email-rows"
+     hx-swap="innerHTML">
 </div>
 
 <!-- Webhook Configuration Modal -->
@@ -143,7 +183,7 @@
 
         <button class="uk-modal-close-default" type="button" uk-close></button>
 
-        <h3 class="uk-modal-title">Webhook Configuration for <?= escape($email) ?></h3>
+        <h3 class="uk-modal-title">Webhook Configuration for <?= $emailEsc ?></h3>
 
         <form id="webhookForm" class="uk-form-stacked uk-margin-top">
 
@@ -245,7 +285,7 @@
     </div>
 </div>
 
-<?php if (isset($expiresAt) && is_int($expiresAt) && $expiresAt > time()): ?>
+<?php if ($expiresAt !== null && $expiresAt > time()): ?>
     <script>
         (function () {
             const el = document.getElementById('address-expiry');
@@ -271,7 +311,6 @@
                     el.textContent = 'expired';
                     el.classList.add('uk-text-danger');
                     clearInterval(timer);
-
                     return;
                 }
                 el.textContent = 'expires in ' + formatRemaining(remaining);
@@ -284,11 +323,20 @@
 <?php endif; ?>
 
 <script>
-    history.pushState({urlpath: "/address/<?= $email ?>"}, "", "/address/<?= $email ?>");
+    // History
+    if (typeof history !== 'undefined') {
+        history.pushState(
+            {urlpath: "/address/" + <?= $emailJs ?>},
+            "",
+            "/address/" + <?= $emailJs ?>
+        );
+    }
 
     function copyEmailToClipboard() {
-        navigator.clipboard.writeText("<?= $email ?>");
-        document.getElementById('copyemailbtn').innerHTML =
+        navigator.clipboard.writeText(<?= $emailJs ?>);
+        const btn = document.getElementById('copyemailbtn');
+        if (!btn) return;
+        btn.innerHTML =
             '<i class="fa-solid fa-circle-check" style="color: green;"></i> Copied!';
     }
 
@@ -344,7 +392,7 @@
                     var spinnerRow = document.createElement('tr');
                     spinnerRow.className = 'otm-spinner-row';
                     spinnerRow.innerHTML =
-                        '<td colspan="<?= $isadmin ? 6 : 5 ?>" class="uk-text-center">' +
+                        '<td colspan="<?= $colspanEmails ?>" class="uk-text-center">' +
                         '<span uk-spinner="ratio: 0.7" aria-label="Waiting for emails" role="status"></span>' +
                         '</td>';
 
@@ -387,7 +435,7 @@
             var tr = document.createElement('tr');
             tr.className = 'otm-spinner-row';
             tr.innerHTML =
-                '<td colspan="<?= $isadmin ? 6 : 5 ?>" class="uk-text-center">' +
+                '<td colspan="<?= $colspanEmails ?>" class="uk-text-center">' +
                 '<span uk-spinner="ratio: 0.7" aria-label="Waiting for emails" role="status"></span>' +
                 '</td>';
 
@@ -405,7 +453,7 @@
 
     async function openWebhookModal() {
         try {
-            const response = await fetch('/api/webhook/get/<?= $email ?>');
+            const response = await fetch('/api/webhook/get/' + <?= $emailJs ?>);
             if (response.ok) {
                 currentWebhookConfig = await response.json();
 
@@ -416,9 +464,9 @@
                 document.getElementById('payloadTemplate').value =
                     currentWebhookConfig.payload_template || '{\n  "email": "{{to}}",\n  "from": "{{from}}",\n  "subject": "{{subject}}",\n  "body": "{{body}}",\n  "attachments": {{attachments}}\n}';
                 document.getElementById('maxAttempts').value =
-                    currentWebhookConfig.retry_config?.max_attempts || 3;
+                    (currentWebhookConfig.retry_config && currentWebhookConfig.retry_config.max_attempts) || 3;
                 document.getElementById('backoffMultiplier').value =
-                    currentWebhookConfig.retry_config?.backoff_multiplier || 2;
+                    (currentWebhookConfig.retry_config && currentWebhookConfig.retry_config.backoff_multiplier) || 2;
                 document.getElementById('secretKey').value =
                     currentWebhookConfig.secret_key || '';
             }
@@ -432,17 +480,17 @@
     async function saveWebhookConfig() {
         const formData = new FormData(document.getElementById('webhookForm'));
         const config = {
-            email: '<?= $email ?>',
+            email: <?= $emailJs ?>,
             enabled: formData.get('enabled') === 'on',
-            webhook_url: formData.get('webhook_url'),
-            payload_template: formData.get('payload_template'),
-            max_attempts: parseInt(formData.get('max_attempts')),
+            webhook_url: formData.get('webhook_url') || '',
+            payload_template: formData.get('payload_template') || '',
+            max_attempts: parseInt(formData.get('max_attempts'), 10),
             backoff_multiplier: parseFloat(formData.get('backoff_multiplier')),
-            secret_key: formData.get('secret_key')
+            secret_key: formData.get('secret_key') || ''
         };
 
         try {
-            const response = await fetch('/api/webhook/save/<?= $email ?>', {
+            const response = await fetch('/api/webhook/save/' + <?= $emailJs ?>, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
