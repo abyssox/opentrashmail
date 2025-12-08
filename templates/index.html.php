@@ -4,12 +4,16 @@ declare(strict_types=1);
 use OpenTrashmail\Utils\View;
 use OpenTrashmail\Utils\System;
 
-$currentUrl   = isset($url) ? (string)$url : '';
+$currentUrl   = $url ?? '';
 $settings     = is_array($settings ?? null) ? $settings : [];
 $adminEnabled = !empty($settings['ADMIN_ENABLED']);
 
-$currentUrlEsc = View::escape($currentUrl);
+$apiPath = '/api';
+if ($currentUrl !== '') {
+    $apiPath .= '/' . $currentUrl;
+}
 ?>
+
 <!doctype html>
 <html lang="en">
 
@@ -88,7 +92,7 @@ $currentUrlEsc = View::escape($currentUrl);
 
 <main id="main"
       class="uk-container"
-      hx-get="/api/<?= $currentUrlEsc ?>"
+      hx-get="<?= View::escape($apiPath) ?>"
       hx-trigger="load">
 </main>
 
