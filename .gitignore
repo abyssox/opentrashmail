@@ -1,5 +1,6 @@
 config.ini
-web/version.txt
 python/*.pem
 .idea
+/vendor/
+composer.phar
 /vendor/
