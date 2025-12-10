@@ -14,16 +14,14 @@ final class AppController
      */
     public function __construct(array $settings)
     {
-        $this->apiController  = new ApiController($settings);
-        $this->rssController  = new RssController($settings);
+        $this->apiController = new ApiController($settings);
+        $this->rssController = new RssController($settings);
         $this->jsonController = new JsonController($settings);
     }
 
     /**
-     * Entrypoint for routes dispatched by FastRoute.
-     *
-     * @param string              $routeName Name assigned in FastRoute
-     * @param array<string,mixed> $vars      Route parameters from FastRoute
+     * @param string $routeName Name assigned in FastRoute
+     * @param array<string,mixed> $vars Route parameters from FastRoute
      *
      * @return string|null
      */

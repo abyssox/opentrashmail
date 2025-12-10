@@ -36,14 +36,14 @@ class Mailbox
         );
 
         if ($baseDir === null) {
-            $baseDir     = \ROOT . \DS . 'data';
+            $baseDir     = ROOT . DS . 'data';
             $realBaseDir = realpath($baseDir) ?: $baseDir;
         }
 
-        $path = $baseDir . \DS . $email;
+        $path = $baseDir . DS . $email;
 
         $realPath = realpath($path);
-        if ($realPath !== false && str_starts_with($realPath, rtrim($realBaseDir, \DS) . \DS)) {
+        if ($realPath !== false && str_starts_with($realPath, rtrim($realBaseDir, DS) . DS)) {
             return $realPath;
         }
 
@@ -62,7 +62,7 @@ class Mailbox
 
     private static function loadEmailJson(string $email, string $id): ?array
     {
-        $file = self::getDirForEmail($email) . \DS . $id . '.json';
+        $file = self::getDirForEmail($email) . DS . $id . '.json';
 
         if (!is_file($file)) {
             return null;
@@ -100,7 +100,7 @@ class Mailbox
 
     public static function emailIdExists(string $email, string $id): bool
     {
-        $file = self::getDirForEmail($email) . \DS . $id . '.json';
+        $file = self::getDirForEmail($email) . DS . $id . '.json';
 
         return is_file($file);
     }
@@ -119,7 +119,7 @@ class Mailbox
 
         if ($isAdminInbox) {
             $addresses = self::listEmailAddresses();
-            if (!is_array($addresses) || $addresses === []) {
+            if ($addresses === []) {
                 return [];
             }
         } else {
@@ -147,7 +147,7 @@ class Mailbox
                 }
 
                 $time     = substr($entry, 0, -5);
-                $filePath = $dir . \DS . $entry;
+                $filePath = $dir . DS . $entry;
 
                 $raw = @file_get_contents($filePath) ?: '';
                 $json = json_decode($raw, true);
@@ -203,7 +203,7 @@ class Mailbox
     public static function listEmailAddresses(): array
     {
         $out  = [];
-        $base = \ROOT . \DS . 'data' . \DS;
+        $base = ROOT . DS . 'data' . DS;
 
         if ($handle = @opendir($base)) {
             while (false !== ($entry = readdir($handle))) {
@@ -219,14 +219,14 @@ class Mailbox
 
     public static function attachmentExists(string $email, string $attachment): bool
     {
-        $file = self::getDirForEmail($email) . \DS . 'attachments' . \DS . $attachment;
+        $file = self::getDirForEmail($email) . DS . 'attachments' . DS . $attachment;
 
         return is_file($file);
     }
 
     public static function listAttachmentsOfMailId(string $email, string $id): array
     {
-        $file = self::getDirForEmail($email) . \DS . $id . '.json';
+        $file = self::getDirForEmail($email) . DS . $id . '.json';
 
         if (!is_file($file)) {
             return [];
@@ -254,10 +254,10 @@ class Mailbox
         $attachments = self::listAttachmentsOfMailId($email, $id);
 
         foreach ($attachments as $attachment) {
-            @unlink($dir . \DS . 'attachments' . \DS . $attachment);
+            @unlink($dir . DS . 'attachments' . DS . $attachment);
         }
 
-        return @unlink($dir . \DS . $id . '.json');
+        return @unlink($dir . DS . $id . '.json');
     }
 
     public static function countEmailsOfAddress(string $email): int
@@ -293,7 +293,7 @@ class Mailbox
                 continue;
             }
 
-            $path = $dir . \DS . $item;
+            $path = $dir . DS . $item;
 
             if (is_link($path) || !is_dir($path)) {
                 if (!unlink($path)) {

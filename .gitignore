@@ -1,6 +1,7 @@
 config.ini
+route.cache
+web/version.txt
 python/*.pem
 .idea
-/vendor/
 composer.phar
 /vendor/
