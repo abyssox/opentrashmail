@@ -42,24 +42,22 @@ See the [Changelog](CHANGELOG.md).
 
 ## Features
 
-- Python-powered SMTP server that works out of the box for any domain you throw at it
+- Python-based SMTP server that accepts mail for any domain with no extra setup
 - `RSS feed` for every email address
-- `JSON API` for integrating it into your own projects (e.g. to automate 2FA emails)
-- `Webhooks` with per-email configuration and customizable JSON payloads
-- Handles attachments
-- Supports `Plaintext`, `STARTTLS` and `TLS on connect`
-- Email addresses auto-expire after 15 minutes
-- Web interface
-    - Dark/light mode switcher
-    - Automatically checks for new emails
+- `JSON API` for integrating into your own tools (perfect for automating 2FA email handling)
+- `Webhooks` with per-address configuration and fully customizable JSON payloads
+- Handles attachments out of the box
+- Supports `plaintext` SMTP, `STARTTLS`, and `TLS-on-connect`
+- Ephemeral email addresses that `auto-expire` after 15 minutes
+- Web interface:
+    - Light/dark mode toggle
+    - Automatic checking for new emails
     - Download attachments
     - Delete emails
     - Generate random email addresses
-    - View server logs and list all accounts as admin
-- 100% file-based, no database needed
-- Can be used as an email honeypot or to programmatically handle 2FA emails
-- No need to pre-create email addresses — any valid email address can be sent to
-
+    - Admin view for server logs and all accounts
+- 100% file-based storage - `no database required`
+- Ideal as an email honeypot or automation backend for handling 2FA and other transactional emails
 ---
 
 ## General API endpoints
@@ -137,32 +135,38 @@ Edit `config.ini` to configure the server. Available settings:
 - `ADMIN_PASSWORD`  
   If set, this password is required to access the admin menu.
 
+- `SHOW_ACCOUNT_LIST`
+  If set to `true` a list of all email addresses which have received at least one email is available via API and admin menu.
+
+- `SHOW_LOGS`
+  If set to `true` a page with all logfiles and the current config is available in admin menu.  
+
 ---
 
 ## Docker environment variables
 
 When running via Docker, the following environment variables are supported:
 
-| ENV var                | Description                                                                                                        | Example values                                    |
-|------------------------|--------------------------------------------------------------------------------------------------------------------|---------------------------------------------------|
-| `URL`                  | URL of the web interface. Used by the API and RSS feed                                                            | `http://localhost:8080`                           |
-| `DISCARD_UNKNOWN`      | Whether to delete emails addressed to domains that are not configured                                             | `true`, `false`                                   |
-| `DOMAINS`              | Whitelisted domains the server will listen for. If `DISCARD_UNKNOWN=false`, used only to generate random emails   | `example.com,example.org`                         |
-| `SHOW_ACCOUNT_LIST`    | If `true`, all accounts that received emails can be listed via API or web interface                               | `true`, `false`                                   |
-| `ADMIN`                | If set to a valid email, entering it in API or web interface shows all emails of all accounts (catch-all)        | `test@test.com`                                   |
-| `DATEFORMAT`           | Date format used in the web interface (see [moment.js](https://momentjs.com/))                                    | `"MMMM DD YYYY, h:mm:ss a"`                       |
-| `SKIP_FILEPERMISSIONS` | If `true`, won't fix file permissions for the data folder in the container (useful for local dev). Default `false` | `true`, `false`                                   |
-| `PASSWORD`             | If configured, site and API require this password (form, GET/POST `password` or header `PWD`)                     | `your-strong-password`                            |
-| `ALLOWED_IPS`          | Comma-separated list of IPv4/IPv6 CIDR ranges allowed to use the web UI or API                                    | `192.168.5.0/24,2a02:ab:cd:ef::/60,172.16.0.0/16` |
-| `ATTACHMENTS_MAX_SIZE` | Max size per email attachment in bytes                                                                            | `2000000` (= 2MB)                                 |
-| `MAILPORT_TLS`         | Port used for TLS on connect (TLSC). Requires `TLS_CERTIFICATE` and `TLS_PRIVATE_KEY`                             | `465`                                             |
-| `TLS_CERTIFICATE`      | Path to the certificate (chain). Relative to `/python` or absolute                                                | `/certs/cert.pem` or `cert.pem`                   |
-| `TLS_PRIVATE_KEY`      | Path to the certificate's private key. Relative to `/python` or absolute                                          | `/certs/privkey.pem` or `key.pem`                 |
-| `WEBHOOK_URL`          | Global webhook URL to receive email JSON payloads                                                                 | `https://example.com/webhook`                     |
-| `ADMIN_ENABLED`        | Enables the admin menu                                                                                            | `false`, `true`                                   |
-| `ADMIN_PASSWORD`       | Password to protect the admin menu                                                                                | `123456`                                          |
-| `DELETE_OLDER_THAN_DAYS` | Automatically delete mails older than the given number of days                                                  | `90`                                              |
-
+| ENV var                | Description                                                                                                               | Example values                                    |
+|------------------------|---------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------|
+| `URL`                  | URL of the web interface. Used by the API and RSS feed                                                                    | `http://localhost:8080`                           |
+| `DISCARD_UNKNOWN`      | Whether to delete emails addressed to domains that are not configured                                                     | `true`, `false`                                   |
+| `DOMAINS`              | Whitelisted domains the server will listen for. If `DISCARD_UNKNOWN=false`, used only to generate random emails           | `example.com,example.org`                         |
+| `SHOW_ACCOUNT_LIST`    | If set to `true` a list of all email addresses which have received at least one email is available via API and admin menu | `true`, `false`                                   |
+| `ADMIN`                | If set to a valid email, entering it in API or web interface shows all emails of all accounts (catch-all)                 | `test@test.com`                                   |
+| `DATEFORMAT`           | Date format used in the web interface (see [moment.js](https://momentjs.com/))                                            | `"MMMM DD YYYY, h:mm:ss a"`                       |
+| `SKIP_FILEPERMISSIONS` | If `true`, won't fix file permissions for the data folder in the container (useful for local dev). Default `false`        | `true`, `false`                                   |
+| `PASSWORD`             | If configured, site and API require this password (form, GET/POST `password` or header `PWD`)                             | `your-strong-password`                            |
+| `ALLOWED_IPS`          | Comma-separated list of IPv4/IPv6 CIDR ranges allowed to use the web UI or API                                            | `192.168.5.0/24,2a02:ab:cd:ef::/60,172.16.0.0/16` |
+| `ATTACHMENTS_MAX_SIZE` | Max size per email attachment in bytes                                                                                    | `2000000` (= 2MB)                                 |
+| `MAILPORT_TLS`         | Port used for TLS on connect (TLSC). Requires `TLS_CERTIFICATE` and `TLS_PRIVATE_KEY`                                     | `465`                                             |
+| `TLS_CERTIFICATE`      | Path to the certificate (chain). Relative to `/python` or absolute                                                        | `/certs/cert.pem` or `cert.pem`                   |
+| `TLS_PRIVATE_KEY`      | Path to the certificate's private key. Relative to `/python` or absolute                                                  | `/certs/privkey.pem` or `key.pem`                 |
+| `WEBHOOK_URL`          | Global webhook URL to receive email JSON payloads                                                                         | `https://example.com/webhook`                     |
+| `ADMIN_ENABLED`        | Enables the admin menu                                                                                                    | `false`, `true`                                   |
+| `ADMIN_PASSWORD`       | Password to protect the admin menu                                                                                        | `123456`                                          |
+| `SHOW_LOGS`            | If set to `true` a page with all logfiles and the current config is available in admin menu                               | `true`, `false`                                   |
+| `TZ`                   | Timezone used inside the docker container.                                                                                | `Europe/Berlin`                                   |
 ---
 
 ## TLS
@@ -427,7 +431,7 @@ function verifyWebhook(req, res) {
 
 ## Testing webhooks
 
-Use the included test script for quick verification:
+Quickly verify your setup using the included test script:
 
 ```bash
 # Simple test
@@ -445,3 +449,21 @@ python3 tools/test_webhook.py test@example.com \
 - Maximum 10 retry attempts to prevent resource exhaustion
 - Payload templates must be valid JSON
 - All placeholders are properly escaped to prevent JSON injection
+
+## Testing email
+
+Quickly verify your setup using the included test script:
+
+```bash
+# Send a plaintext email
+python3 tools/send.py b@domain.tld -plain
+
+# Send a HTML email
+python3 tools/send.py b@domain.tld -html
+
+# Send a multipart (text + HTML) email
+python3 tools/send.py b@domain.tld -multipart
+
+# Send an email with an attachment
+python3 tools/send.py b@domain.tld -attachment
+```

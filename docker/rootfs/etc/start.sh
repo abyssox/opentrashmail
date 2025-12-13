@@ -3,12 +3,24 @@ set -euo pipefail
 
 echo 'Starting OpenTrashmail'
 
+: "${TZ:=UTC}"
 APP_DIR=/var/www/opentrashmail
 LOG_DIR="$APP_DIR/logs"
 DATA_DIR="$APP_DIR/data"
 CONFIG_FILE="$APP_DIR/config.ini"
 
 cd "$APP_DIR"
+
+if [ -n "$TZ" ] && [ -f "/usr/share/zoneinfo/$TZ" ]; then
+    echo "date.timezone=${TZ}" > /usr/local/etc/php/conf.d/99-timezone.ini
+    ln -snf "/usr/share/zoneinfo/$TZ" /etc/localtime
+    echo "$TZ" > /etc/timezone
+    echo " [+] Timezone set to '$TZ'" >&2
+else
+    echo " [+] WARNING: Timezone '$TZ' not found in /usr/share/zoneinfo, falling back to UTC" >&2
+    ln -snf "/usr/share/zoneinfo/UTC" /etc/localtime
+    echo "UTC" > /etc/timezone
+fi
 
 echo ' [+] Setting up config.ini'
 
@@ -43,28 +55,24 @@ EOF
 
 if [[ "${SKIP_FILEPERMISSIONS:-false}" != "true" ]]; then
   echo ' [+] Fixing file permissions'
-  mkdir -p "$DATA_DIR" "$LOG_DIR"
   chown -R www-data:www-data "$DATA_DIR" "$LOG_DIR" "$CONFIG_FILE"
-  chmod -R u+rwX,go+rX "$APP_DIR"
+  chmod -R 0755 "$APP_DIR"
+  chmod 0750 "$LOG_DIR"
 fi
 
 echo ' [+] Starting crond'
-touch "$LOG_DIR/cleanup_maildir.log"
-crond -l 2
+crond -f -l 2 &
 
 echo ' [+] Starting php-fpm'
-php-fpm -D
-
-echo ' [+] Starting webserver'
-mkdir -p "$LOG_DIR"
-touch "$LOG_DIR/web.access.log" "$LOG_DIR/web.error.log"
-
-mkdir -p /run/nginx
-nginx
+php-fpm -F &
 
 echo ' [+] Starting Mailserver'
 
 su - www-data -s /bin/ash -c '
   cd /var/www/opentrashmail/python
-  /opt/pyenv/bin/python -u mailserver3.py >> /var/www/opentrashmail/logs/mailserver.log 2>&1
-'
+  /opt/pyenv/bin/python -u mailserver3.py 2>&1 \
+    | tee -a /var/www/opentrashmail/logs/mailserver.log
+' &
+
+echo ' [+] Starting webserver'
+nginx -g 'daemon off;'

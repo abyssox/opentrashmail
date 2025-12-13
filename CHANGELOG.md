@@ -1,4 +1,11 @@
 # Changelog
+## 1.8.0
+- Refactored whole PHP code and Project structure
+- Use composer
+- Added Timezone support
+- Added logrotate feature
+- send.py now supports parameters -plain -html -multipart -attachment
+ 
 ## 1.7.1
 - Added auto expire feature to email addresses (default: 15 minutes)
 - Added CSRF check to admin login

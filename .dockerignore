@@ -5,3 +5,5 @@ data/*
 docs
 logs/*
 .idea
+docker/rootfs/Dockerfile
+vendor/*

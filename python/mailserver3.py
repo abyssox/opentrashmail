@@ -16,6 +16,12 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+logging.basicConfig(
+    level=logging.INFO,
+    format='[%(asctime)s] [Mailserver] %(levelname)s - %(message)s',
+    datefmt='%d-%b-%Y %H:%M:%S',
+)
+
 # Base paths
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 DATA_DIR = os.path.join(BASE_DIR, "data")
@@ -445,12 +451,12 @@ async def run(port: int):
             )
             controller_tls.start()
             logger.info(
-                "[i] Starting TLS only Mailserver on port %d",
+                "Starting TLS only Mailserver on port %d",
                 MAILPORT_TLS,
             )
 
         logger.info(
-            "[i] Starting plaintext Mailserver (with STARTTLS support) on port %d",
+            "Starting plaintext Mailserver (with STARTTLS support) on port %d",
             port,
         )
     else:
@@ -461,11 +467,11 @@ async def run(port: int):
         )
         controller_plaintext.start()
 
-        logger.info("[i] Starting plaintext Mailserver on port %d", port)
+        logger.info("Starting plaintext Mailserver on port %d", port)
 
         controller_tls = None
 
-    logger.info("[i] Ready to receive Emails")
+    logger.info("Ready to receive Emails")
     logger.info("")
 
     try:
@@ -478,18 +484,9 @@ async def run(port: int):
 
 
 if __name__ == "__main__":
-    ch = logging.StreamHandler()
-    ch.setLevel(logging.DEBUG)
-    formatter = logging.Formatter(
-        "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-        )
-    ch.setFormatter(formatter)
-    logger.setLevel(logging.DEBUG)
-    logger.addHandler(ch)
-
     if not os.path.isfile(CONFIG_PATH):
-        logger.info(
-            "[ERR] Config.ini not found. "
+        logger.Error(
+            "Config.ini not found. "
             "Rename example.config.ini to config.ini. Defaulting to port 25"
         )
         port = 25
@@ -525,8 +522,8 @@ if __name__ == "__main__":
         else:
             WEBHOOK_URL = ""
 
-    logger.info("[i] Discard unknown domains: %s", DISCARD_UNKNOWN)
-    logger.info("[i] Max size of attachments: %d", ATTACHMENTS_MAX_SIZE)
-    logger.info("[i] Listening for domains: %s", DOMAINS)
+    logger.info("Discard unknown domains: %s", DISCARD_UNKNOWN)
+    logger.info("Max size of attachments: %d", ATTACHMENTS_MAX_SIZE)
+    logger.info("Listening for domains: %s", DOMAINS)
 
     asyncio.run(run(port))

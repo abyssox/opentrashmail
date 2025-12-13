@@ -2,7 +2,7 @@ services:
   opentrashmail:
     build:
       context: .
-      dockerfile: docker/Dockerfile
+      dockerfile: Dockerfile
 
     volumes:
       - './:/var/www/opentrashmail'
@@ -10,13 +10,13 @@ services:
       - URL=http://localhost:8080
       - DOMAINS=example.com
       - DATEFORMAT=DD.MM.YYYY HH:mm
-      - SKIP_FILEPERMISSIONS=true
+      - SKIP_FILEPERMISSIONS=false
       - DISCARD_UNKNOWN=false
       - SHOW_ACCOUNT_LIST=true
       - SHOW_LOGS=true
       - ADMIN_ENABLED=true
       - ADMIN_PASSWORD=test123
-      #- ADMIN_PASSWORD=
+      - TZ=Europe/Berlin
       # - PASSWORD=123456
       # - ALLOWED_IPS=192.168.0.0/16,2a02:ab:cd:ef::/60
       # - ATTACHMENTS_MAX_SIZE=10000000
