@@ -9,88 +9,82 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
 }
 
-$adminEnabled  = (bool)($settings['ADMIN_ENABLED']  ?? false);
+$adminEnabled  = (bool)($settings['ADMIN_ENABLED'] ?? false);
 $adminPassword = (string)($settings['ADMIN_PASSWORD'] ?? '');
-$error         = '';
+$error         = isset($error) ? (string)$error : '';
 
 if (!$adminEnabled) {
     return;
 }
 
-if (empty($_SESSION['admin_csrf_token'])) {
-    $_SESSION['admin_csrf_token'] = bin2hex(random_bytes(32));
-}
-$csrfToken = $_SESSION['admin_csrf_token'];
+$csrfToken = isset($csrfToken) && is_string($csrfToken)
+        ? $csrfToken
+        : (string)($_SESSION['admin_csrf_token'] ?? '');
 
-if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
-    $reqPassword = $_POST['password']   ?? null;
-    $postedToken = $_POST['csrf_token'] ?? '';
-
-    if ($postedToken === '' || !hash_equals($csrfToken, $postedToken)) {
-        $error = 'Invalid or expired form token. Please try again.';
-        $_SESSION['admin_csrf_token'] = bin2hex(random_bytes(32));
-        $csrfToken = $_SESSION['admin_csrf_token'];
-    } elseif ($adminPassword !== '' && hash_equals($adminPassword, (string)$reqPassword)) {
-        $_SESSION['admin'] = true;
-        unset($_SESSION['admin_csrf_token']);
-    } else {
-        $error = 'Wrong password';
-    }
-}
+$requireCaptcha = isset($requireCaptcha)
+        ? (bool)$requireCaptcha
+        : (((int)($_SESSION['admin_failed_password_attempts'] ?? 0)) >= 2);
 ?>
 
 <?php if ($adminPassword !== '' && empty($_SESSION['admin'])): ?>
 
-    <div class="uk-flex uk-flex-center">
-        <div class="uk-width-medium">
+    <section class="uk-section uk-section-muted otm-theme-section otm-admin-screen">
+        <div class="uk-container">
+            <div class="uk-flex uk-flex-center" style="min-height: 100vh;">
+                <div class="uk-width-1-1" style="max-width: 560px;">
 
-            <div class="uk-card uk-card-default uk-card-body uk-margin">
-                <h1 class="uk-card-title uk-text-center">Admin Login</h1>
+                    <div class="uk-card uk-card-default uk-card-body uk-box-shadow-medium uk-border-rounded">
+                        <h1 class="uk-card-title uk-text-center">Admin Login</h1>
+                        <form method="post"
+                              hx-post="/api/admin"
+                              hx-target="#main"
+                              class="uk-form-stacked">
 
-                <?php if ($error !== ''): ?>
-                    <div class="uk-alert-danger">
-                        <a class="uk-alert-close"></a>
-                        <p><?= View::escape($error) ?></p>
+                            <input type="hidden"
+                                   name="csrf_token"
+                                   value="<?= View::escape($csrfToken) ?>">
+
+                            <div class="uk-margin">
+                                <label class="uk-form-label" for="admin-password">Password</label>
+                                <div class="uk-form-controls">
+                                    <input class="uk-input"
+                                           type="password"
+                                           id="admin-password"
+                                           name="password"
+                                           placeholder="Password"
+                                           required>
+                                </div>
+                            </div>
+
+                            <?php if (!empty($requireCaptcha)): ?>
+                                <div class="uk-margin">
+                                    <div class="uk-form-controls">
+                                        <div class="iconcaptcha-widget" id="iconcaptcha" data-theme="light"></div>
+                                    </div>
+                                </div>
+                            <?php endif; ?>
+
+                            <div class="uk-margin">
+                                <button class="uk-button uk-button-primary uk-button-large uk-width-1-1">Login</button>
+                            </div>
+
+                            <?php if ($error !== ''): ?>
+                                <div class="uk-alert-danger" uk-alert>
+                                    <a class="uk-alert-close" uk-close></a>
+                                    <p><?= View::escape($error) ?></p>
+                                </div>
+                            <?php endif; ?>
+                        </form>
                     </div>
-                <?php endif; ?>
 
-                <form method="post"
-                      hx-post="/api/admin"
-                      hx-target="#main"
-                      class="uk-form-stacked">
-
-                    <input type="hidden"
-                           name="csrf_token"
-                           value="<?= View::escape($csrfToken) ?>">
-
-                    <div class="uk-margin">
-                        <label class="uk-form-label" for="admin-password">Password</label>
-                        <div class="uk-form-controls">
-                            <input class="uk-input"
-                                   type="password"
-                                   id="admin-password"
-                                   name="password"
-                                   placeholder="Password"
-                                   required>
-                        </div>
-                    </div>
-
-                    <div class="uk-margin">
-                        <button type="submit"
-                                class="uk-button uk-button-primary uk-width-1-1">
-                            Login
-                        </button>
-                    </div>
-                </form>
+                </div>
             </div>
-
         </div>
-    </div>
+    </section>
 
     <?php return; endif; ?>
 
 <div class="uk-card uk-card-default uk-card-body uk-margin">
-
     <h1 class="uk-card-title">Admin</h1>
 
     <div class="uk-margin-top uk-margin-bottom uk-flex uk-flex-left uk-flex-wrap">

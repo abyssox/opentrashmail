@@ -1,11 +1,17 @@
 version: '3.9'
 services:
   opentrashmail:
+    build:
+      context: .
+      target: prod
+
     image: 'abyssox/opentrashmail:latest'
     volumes:
       - './data:/var/www/opentrashmail/data'
       - './logs:/var/www/opentrashmail/logs'
     environment:
+      - PUID=1000
+      - PGID=1000
       - URL=http://localhost:8080
       - DOMAINS=example.com
       - DATEFORMAT=DD.MM.YYYY HH:mm

@@ -3,10 +3,13 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      target: dev
 
     volumes:
       - './:/var/www/opentrashmail'
     environment:
+      - PUID=1000
+      - PGID=1000
       - URL=http://localhost:8080
       - DOMAINS=example.com
       - DATEFORMAT=DD.MM.YYYY HH:mm
@@ -17,7 +20,7 @@ services:
       - ADMIN_ENABLED=true
       - ADMIN_PASSWORD=test123
       - TZ=Europe/Berlin
-      # - PASSWORD=123456
+      - PASSWORD=123456
       # - ALLOWED_IPS=192.168.0.0/16,2a02:ab:cd:ef::/60
       # - ATTACHMENTS_MAX_SIZE=10000000
       # - MAILPORT_TLS=465
@@ -28,3 +31,6 @@ services:
     ports:
       - '2525:25'
       - '8080:80'
+
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

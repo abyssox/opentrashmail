@@ -4,8 +4,8 @@ declare(strict_types=1);
 use OpenTrashmail\Utils\View;
 use OpenTrashmail\Utils\System;
 
-$currentUrl   = $url ?? '';
-$settings     = is_array($settings ?? null) ? $settings : [];
+$currentUrl = $url ?? '';
+$settings = is_array($settings ?? null) ? $settings : [];
 $adminEnabled = !empty($settings['ADMIN_ENABLED']);
 
 $apiPath = '/api';
@@ -25,6 +25,7 @@ if ($currentUrl !== '') {
     <link rel="stylesheet" href="<?= View::assetUrl('css/all.min.css') ?>">
     <link rel="stylesheet" href="<?= View::assetUrl('css/prism.css') ?>">
     <link rel="stylesheet" href="<?= View::assetUrl('css/opentrashmail.css') ?>">
+    <link rel="stylesheet" href="<?= View::assetUrl('iconcaptcha/css/iconcaptcha.min.css') ?>">
 
     <title>OpenTrashmail</title>
 </head>
@@ -99,6 +100,7 @@ if ($currentUrl !== '') {
 <script src="<?= View::assetUrl('js/uikit.min.js') ?>"></script>
 <script src="<?= View::assetUrl('js/htmx.min.js') ?>"></script>
 <script src="<?= View::assetUrl('js/moment-with-locales.min.js') ?>"></script>
+<script src="<?= View::assetUrl('iconcaptcha/js/iconcaptcha.min.js') ?>"></script>
 <script src="<?= View::assetUrl('js/opentrashmail.js') ?>"></script>
 
 </body>

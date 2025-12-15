@@ -13,12 +13,38 @@ require __DIR__ . '/../vendor/autoload.php';
 const DS = DIRECTORY_SEPARATOR;
 const ROOT = __DIR__ . DS . '..';
 const TEMPLATES_PATH = ROOT . DS . 'templates' . DS;
-const CACHE_FILE = ROOT . DS . 'route.cache';
+const CACHE_FILE = '/tmp/opentrashmail-route.cache';
 
 $settingsRaw = Settings::load();
 $settings = is_array($settingsRaw) ? $settingsRaw : [];
 
 $controller = new AppController($settings);
+
+$dispatcher = cachedDispatcher(
+    static function (RouteCollector $r): void {
+        $r->addRoute('GET', '/api[/]', 'api_intro');
+        $r->addRoute(['GET', 'POST'], '/api/address[/{email}]', 'api_address');
+        $r->addRoute('GET', '/api/read/{email}/{id}', 'api_read');
+        $r->addRoute('GET', '/api/listaccounts', 'api_listaccounts');
+        $r->addRoute('GET', '/api/raw-html/{email}/{id}', 'api_raw_html');
+        $r->addRoute('GET', '/api/raw/{email}/{id}', 'api_raw');
+        $r->addRoute('GET', '/api/attachment/{email}/{attachment}', 'api_attachment');
+        $r->addRoute('GET', '/api/delete/{email}/{id}', 'api_delete');
+        $r->addRoute('GET', '/api/random', 'api_random');
+        $r->addRoute(['GET', 'POST'], '/api/deleteaccount/{email}', 'api_deleteaccount');
+        $r->addRoute('GET', '/api/logs[/{lines}]', 'api_logs');
+        $r->addRoute(['GET', 'POST'], '/api/admin', 'api_admin');
+        $r->addRoute(['GET', 'POST'], '/api/webhook/{action}/{email}', 'api_webhook');
+        $r->addRoute(['GET', 'POST', 'OPTIONS'], '/api/captcha-request', 'api_captcha_request');
+        $r->addRoute('GET', '/rss/{email}', 'rss');
+        $r->addRoute(['GET', 'POST'], '/json/listaccounts', 'json_listaccounts');
+        $r->addRoute('GET', '/json/{email}[/{id}]', 'json_email');
+    },
+    [
+        'cacheFile' => CACHE_FILE,
+        'cacheDisabled' => false,
+    ]
+);
 
 AccessGuard::enforce($settings, $controller);
 
@@ -46,31 +72,6 @@ if ($hxRequest !== 'true') {
         return;
     }
 }
-
-$dispatcher = cachedDispatcher(
-    static function (RouteCollector $r): void {
-        $r->addRoute('GET', '/api[/]', 'api_intro');
-        $r->addRoute(['GET', 'POST'], '/api/address[/{email}]', 'api_address');
-        $r->addRoute('GET', '/api/read/{email}/{id}', 'api_read');
-        $r->addRoute('GET', '/api/listaccounts', 'api_listaccounts');
-        $r->addRoute('GET', '/api/raw-html/{email}/{id}', 'api_raw_html');
-        $r->addRoute('GET', '/api/raw/{email}/{id}', 'api_raw');
-        $r->addRoute('GET', '/api/attachment/{email}/{attachment}', 'api_attachment');
-        $r->addRoute('GET', '/api/delete/{email}/{id}', 'api_delete');
-        $r->addRoute('GET', '/api/random', 'api_random');
-        $r->addRoute(['GET', 'POST'], '/api/deleteaccount/{email}', 'api_deleteaccount');
-        $r->addRoute('GET', '/api/logs[/{lines}]', 'api_logs');
-        $r->addRoute(['GET', 'POST'], '/api/admin', 'api_admin');
-        $r->addRoute(['GET', 'POST'], '/api/webhook/{action}/{email}', 'api_webhook');
-        $r->addRoute('GET', '/rss/{email}', 'rss');
-        $r->addRoute(['GET', 'POST'], '/json/listaccounts', 'json_listaccounts');
-        $r->addRoute('GET', '/json/{email}[/{id}]', 'json_email');
-    },
-    [
-        'cacheFile' => CACHE_FILE,
-        'cacheDisabled' => false,
-    ]
-);
 
 $routeInfo = $dispatcher->dispatch($httpMethod, $path);
 

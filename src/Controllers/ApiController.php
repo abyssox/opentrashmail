@@ -6,6 +6,7 @@ namespace OpenTrashmail\Controllers;
 use OpenTrashmail\Services\Mailbox;
 use OpenTrashmail\Services\RandomEmail;
 use OpenTrashmail\Services\Webhook;
+use OpenTrashmail\Utils\Captcha;
 
 final class ApiController extends AbstractController
 {
@@ -49,6 +50,14 @@ final class ApiController extends AbstractController
 
                 if (isset($vars['url']) && is_string($vars['url'])) {
                     $data['url'] = $vars['url'];
+                }
+
+                if (array_key_exists('requireCaptcha', $vars)) {
+                    $data['requireCaptcha'] = (bool)$vars['requireCaptcha'];
+                }
+
+                if (isset($vars['csrfToken']) && is_string($vars['csrfToken'])) {
+                    $data['csrfToken'] = $vars['csrfToken'];
                 }
 
                 if (isset($vars['settings']) && is_array($vars['settings'])) {
@@ -152,6 +161,18 @@ final class ApiController extends AbstractController
                     'delete' => $this->deleteWebhook($email),
                     default  => '404 Not Found',
                 };
+
+            case 'api_captcha_request':
+                if (session_status() !== PHP_SESSION_ACTIVE) {
+                    session_start();
+                }
+
+                try {
+                    Captcha::processRequest();
+                } catch (\Throwable) {
+                    http_response_code(500);
+                }
+                exit;
 
             default:
                 http_response_code(404);

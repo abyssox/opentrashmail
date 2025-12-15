@@ -21,6 +21,11 @@ abstract class AbstractController
         return '<h1>' . htmlspecialchars($text, ENT_QUOTES, 'UTF-8') . '</h1>';
     }
 
+    final public function render(string $templateName, array $variables = []): string
+    {
+        return $this->renderTemplate($templateName, $variables);
+    }
+
     /**
      * @param array<string,mixed> $variables
      */

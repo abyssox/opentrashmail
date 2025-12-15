@@ -4,9 +4,10 @@ set -euo pipefail
 echo 'Starting OpenTrashmail'
 
 : "${TZ:=UTC}"
+PUID="${PUID:-1000}"
+PGID="${PGID:-1000}"
 APP_DIR=/var/www/opentrashmail
 LOG_DIR="$APP_DIR/logs"
-DATA_DIR="$APP_DIR/data"
 CONFIG_FILE="$APP_DIR/config.ini"
 
 cd "$APP_DIR"
@@ -54,10 +55,23 @@ SHOW_LOGS=${SHOW_LOGS:-false}
 EOF
 
 if [[ "${SKIP_FILEPERMISSIONS:-false}" != "true" ]]; then
-  echo ' [+] Fixing file permissions'
-  chown -R www-data:www-data "$DATA_DIR" "$LOG_DIR" "$CONFIG_FILE"
-  chmod -R 0755 "$APP_DIR"
-  chmod 0750 "$LOG_DIR"
+  echo ' [+] Fixing runtime permissions (logs + data)'
+
+  chown "$PUID":www-data "$LOG_DIR" || true
+  chmod 0750 "$LOG_DIR" || true
+
+  for f in cleanup_maildir.log mailserver.log php.error.log web.access.log web.error.log; do
+    touch "$LOG_DIR/$f"
+    chown www-data:"$PGID" "$LOG_DIR/$f" || true
+    chmod 0640 "$LOG_DIR/$f" || true
+  done
+
+  chown -R www-data:"$PGID" "$APP_DIR/data" || true
+  chmod 2770 "$APP_DIR/data" || true
+  chmod -R ug+rwX "$APP_DIR/data" || true
+  umask 007
+
+  chown "$PUID:$PGID" "$CONFIG_FILE" 2>/dev/null || true
 fi
 
 echo ' [+] Starting crond'
