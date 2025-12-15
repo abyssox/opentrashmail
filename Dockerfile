@@ -98,14 +98,6 @@ RUN set -eux; \
 EXPOSE 80 25 465
 ENTRYPOINT ["/etc/start.sh"]
 
-FROM base AS prod
-USER www-data
-RUN set -eux; \
-    composer install --no-dev --prefer-dist --optimize-autoloader
-USER root
-
-RUN mv "/usr/local/etc/php/php.ini-production" "/usr/local/etc/php/php.ini"
-
 FROM base AS dev
 
 RUN set -eux; \
@@ -121,3 +113,11 @@ USER www-data
 RUN set -eux; \
     composer install --prefer-dist --optimize-autoloader
 USER root
+
+FROM base AS prod
+USER www-data
+RUN set -eux; \
+    composer install --no-dev --prefer-dist --optimize-autoloader
+USER root
+
+RUN mv "/usr/local/etc/php/php.ini-production" "/usr/local/etc/php/php.ini"
