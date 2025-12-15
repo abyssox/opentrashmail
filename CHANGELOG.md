@@ -1,4 +1,7 @@
 # Changelog
+## 1.8.1
+- Don't include xdebug in docker production build
+
 ## 1.8.0
 - Refactored whole PHP code and Project structure
 - Use composer
