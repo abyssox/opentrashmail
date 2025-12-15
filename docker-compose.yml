@@ -1,10 +1,6 @@
 version: '3.9'
 services:
   opentrashmail:
-    build:
-      context: .
-      target: prod
-
     image: 'abyssox/opentrashmail:latest'
     volumes:
       - './data:/var/www/opentrashmail/data'

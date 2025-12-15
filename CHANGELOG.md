@@ -2,10 +2,13 @@
 ## 1.8.0
 - Refactored whole PHP code and Project structure
 - Use composer
+- Added captcha to password.html.php and admin.html.php
 - Added Timezone support
 - Added logrotate feature
 - send.py now supports parameters -plain -html -multipart -attachment
- 
+- Optimized docker image build file (added production and development builds)
+- Add xdebug feature for better php debugging
+
 ## 1.7.1
 - Added auto expire feature to email addresses (default: 15 minutes)
 - Added CSRF check to admin login

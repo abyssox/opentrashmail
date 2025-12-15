@@ -2,7 +2,8 @@ FROM php:8.4-fpm-alpine AS base
 
 LABEL org.opencontainers.image.source="https://github.com/abyssox/opentrashmail"
 
-ENV TZ=${TZ} \
+ARG TZ=UTC
+ENV TZ=$TZ \
     PYTHONUNBUFFERED=1 \
     COMPOSER_ALLOW_SUPERUSER=1 \
     PATH="${PATH}:/opt/pyenv/bin"
@@ -85,6 +86,7 @@ COPY --chown=www-data:www-data . .
 COPY docker/rootfs/ /
 
 RUN set -eux; \
+    chown -R www-data:www-data /var/www/opentrashmail; \
     if [ -f /usr/local/bin/cleanup_maildir.sh ]; then chmod 0755 /usr/local/bin/cleanup_maildir.sh; fi; \
     if [ -f /etc/periodic/daily/logrotate ]; then chmod 0755 /etc/periodic/daily/logrotate; fi; \
     if [ -f /etc/logrotate.conf ]; then chmod 0644 /etc/logrotate.conf; fi; \
