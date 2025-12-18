@@ -43,12 +43,7 @@ class Http
     {
         if (str_contains($range, ',')) {
             $ranges = array_map('trim', explode(',', $range));
-            foreach ($ranges as $singleRange) {
-                if (self::isIpInRange($ip, $singleRange)) {
-                    return true;
-                }
-            }
-            return false;
+            return array_any($ranges, fn($singleRange) => self::isIpInRange($ip, $singleRange));
         }
 
         // Get mask bits

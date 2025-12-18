@@ -29,10 +29,17 @@ final class Captcha
     private static function getCaptchaConfig(): array
     {
         return [
-            'iconPath' =>'/var/www/opentrashmail/public/assets/iconcaptcha/icons/',
+            'iconPath' => '/var/www/opentrashmail/public/assets/iconcaptcha/icons/',
+
             'ipAddress' => static fn() => $_SERVER['REMOTE_ADDR'],
+
             'token' => null,
-            'storage' => ['driver' => 'session', 'datetimeFormat' => 'Y-m-d H:i:s'],
+
+            'storage' => [
+                'driver' => 'session',
+                'datetimeFormat' => 'Y-m-d H:i:s'
+            ],
+
             'challenge' => [
                 'availableIcons' => 250,
                 'iconAmount' => ['min' => 5, 'max' => 8],
@@ -41,6 +48,7 @@ final class Captcha
                 'border' => true,
                 'generator' => GD::class,
             ],
+
             'validation' => [
                 'inactivityExpiration' => 120,
                 'completionExpiration' => 300,
@@ -57,6 +65,21 @@ final class Captcha
                         ],
                     ],
                 ],
+            ],
+
+            'session' => [
+                'driver' => null,
+                'options' => [
+                    'purging' => true,
+                    'identifierTries' => 100,
+                ],
+            ],
+
+            'cors' => [
+                'enabled' => false,
+                'origins' => [],
+                'credentials' => true,
+                'cache' => 86400,
             ],
         ];
     }

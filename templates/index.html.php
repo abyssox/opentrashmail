@@ -8,6 +8,12 @@ $currentUrl = $url ?? '';
 $settings = is_array($settings ?? null) ? $settings : [];
 $adminEnabled = !empty($settings['ADMIN_ENABLED']);
 
+$authUiEnabled = !empty($settings['ADMIN_PASSWORD']);
+if ($authUiEnabled && session_status() !== PHP_SESSION_ACTIVE) {
+    session_start();
+}
+
+
 $apiPath = '/api';
 if ($currentUrl !== '') {
     $apiPath .= '/' . $currentUrl;
@@ -74,6 +80,25 @@ if ($currentUrl !== '') {
                         <i class="fa-solid fa-user-shield"></i>
                         <span class="uk-margin-small-left">Admin</span>
                     </a>
+                <?php endif; ?>
+
+                <?php if ($authUiEnabled): ?>
+                    <div id="authActions"
+                         hx-get="/api/auth-actions"
+                         hx-trigger="load, auth-changed from:body"
+                         hx-swap="innerHTML">
+                        <?php if (!empty($_SESSION['authenticated']) || !empty($_SESSION['admin'])): ?>
+                            <a href="#"
+                               hx-post="/api/logout"
+                               hx-swap="none"
+                               class="otm-link"
+                               aria-label="Logout"
+                               title="Logout">
+                                <i class="fa-solid fa-right-from-bracket"></i>
+                                <span class="uk-margin-small-left">Logout</span>
+                            </a>
+                        <?php endif; ?>
+                    </div>
                 <?php endif; ?>
 
                 <a href="#"

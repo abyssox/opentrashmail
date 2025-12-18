@@ -5,6 +5,7 @@
   "require": {
     "php": ">=8.4",
     "ext-fileinfo": "*",
+    "ext-ctype": "*",
     "nikic/fast-route": "^1.3",
     "fabianwennink/iconcaptcha": "^4.0.6"
   },

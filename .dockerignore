@@ -1,10 +1,10 @@
+.gitattributes
 config.ini
-data/*
+Dockerfile
 .git
 .github
+.idea
+data/*
 docs
 logs/*
-.idea
-docker/rootfs/Dockerfile
 vendor/*
-route.cache

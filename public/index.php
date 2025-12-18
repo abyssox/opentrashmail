@@ -34,6 +34,8 @@ $dispatcher = cachedDispatcher(
         $r->addRoute(['GET', 'POST'], '/api/deleteaccount/{email}', 'api_deleteaccount');
         $r->addRoute('GET', '/api/logs[/{lines}]', 'api_logs');
         $r->addRoute(['GET', 'POST'], '/api/admin', 'api_admin');
+        $r->addRoute('GET', '/api/auth-actions[/]', 'api_auth_actions');
+        $r->addRoute('POST', '/api/logout[/]', 'api_logout');
         $r->addRoute(['GET', 'POST'], '/api/webhook/{action}/{email}', 'api_webhook');
         $r->addRoute(['GET', 'POST', 'OPTIONS'], '/api/captcha-request', 'api_captcha_request');
         $r->addRoute('GET', '/rss/{email}', 'rss');

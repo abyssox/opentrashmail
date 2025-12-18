@@ -55,7 +55,7 @@ SHOW_LOGS=${SHOW_LOGS:-false}
 EOF
 
 if [[ "${SKIP_FILEPERMISSIONS:-false}" != "true" ]]; then
-  echo ' [+] Fixing runtime permissions (logs + data)'
+  echo ' [+] Fixing file/folder permissions'
 
   chown "$PUID":www-data "$LOG_DIR" || true
   chmod 0750 "$LOG_DIR" || true

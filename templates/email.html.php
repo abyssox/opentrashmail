@@ -3,23 +3,45 @@ declare(strict_types=1);
 
 use OpenTrashmail\Utils\View;
 
-$parsed      = isset($emaildata['parsed']) && is_array($emaildata['parsed']) ? $emaildata['parsed'] : [];
-$subject     = (string)($parsed['subject']   ?? '');
-$htmlbody    = (string)($parsed['htmlbody']  ?? '');
-$body        = (string)($parsed['body']      ?? '');
-$rcpts       = isset($emaildata['rcpts']) && is_array($emaildata['rcpts']) ? $emaildata['rcpts'] : [];
+$emailData = isset($emailData) && is_array($emailData) ? $emailData : [];
+$parsed = isset($emailData['parsed']) && is_array($emailData['parsed']) ? $emailData['parsed'] : [];
+$subject = (string)($parsed['subject'] ?? $emailData['subject'] ?? $parsed['headers']['subject'] ?? $emailData['headers']['subject'] ?? '');
+
+$htmlbody = (string)($parsed['htmlbody'] ?? '');
+$body = (string)($parsed['body'] ?? '');
+$rcpts = isset($emailData['rcpts']) && is_array($emailData['rcpts']) ? $emailData['rcpts'] : [];
 $attachments = isset($parsed['attachments']) && is_array($parsed['attachments']) ? $parsed['attachments'] : [];
 
-$email      = isset($email) ? (string)$email : '';
-$mailid     = isset($mailid) ? (string)$mailid : '';
+$attachmentNames = [];
+
+foreach ($attachments as $key => $att) {
+    if (is_array($att)) {
+        $name = (string)($att['filename'] ?? $att['name'] ?? $att['file'] ?? '');
+        if ($name === '' && is_string($key) && $key !== '') {
+            $name = $key;
+        }
+    } else {
+        $name = (string)$att;
+    }
+
+    $name = trim($name);
+    if ($name !== '') {
+        $attachmentNames[] = $name;
+    }
+}
+
+$attachments = $attachmentNames;
+
+$email = isset($email) ? (string)$email : '';
+$mailid = isset($mailid) ? (string)$mailid : '';
 $dateformat = isset($dateformat) ? (string)$dateformat : 'YYYY-MM-DD HH:mm:ss';
 
-$emailEsc  = View::escape($email);
+$emailEsc = View::escape($email);
 $mailidEsc = View::escape($mailid);
 
 $dateformatJs = json_encode($dateformat, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-$emailJs      = json_encode($email, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-$mailidJs     = json_encode($mailid, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+$emailJs = json_encode($email, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+$mailidJs = json_encode($mailid, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
 
 $mailidNumeric = is_numeric($mailid) ? $mailid : '0';
 ?>
@@ -176,8 +198,8 @@ $mailidNumeric = is_numeric($mailid) ? $mailid : '0';
             );
         }
 
-        var trigger  = document.getElementById('renderHtmlTrigger');
-        var modalEl  = document.getElementById('htmlWarningModal');
+        var trigger = document.getElementById('renderHtmlTrigger');
+        var modalEl = document.getElementById('htmlWarningModal');
         var confirmEl = document.getElementById('htmlRenderConfirmBtn');
 
         if (!trigger || !modalEl || !confirmEl || typeof UIkit === 'undefined' || typeof htmx === 'undefined') {

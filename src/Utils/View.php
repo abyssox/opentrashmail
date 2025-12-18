@@ -10,7 +10,7 @@ class View
         return htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8');
     }
 
-    public static function arrayToUl(array $items): string
+    public static function arrayToUnorderedList(array $items): string
     {
         $out = '<ul>';
         foreach ($items as $elem) {
