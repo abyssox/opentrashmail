@@ -204,5 +204,11 @@
         document.body.addEventListener("htmx:load", function (evt) {
             afterDomUpdate(resolveHtmxTarget(evt));
         });
+
+        window.addEventListener("popstate", function () {
+            var path = window.location.pathname;
+            var apiPath = "/api" + (path === "/" ? "" : path);
+            htmx.ajax("GET", apiPath, { target: "#main", swap: "innerHTML" });
+        });
     }
 })();
