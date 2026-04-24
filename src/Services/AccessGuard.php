@@ -84,10 +84,13 @@ final class AccessGuard
         $captchaRequired = self::isCaptchaRequired(self::AUTH_FAILED_KEY);
 
         $headerPassword = $_SERVER['HTTP_PWD'] ?? null;
-        if ($headerPassword !== null && hash_equals($pw, $headerPassword)) {
-            $_SESSION['authenticated'] = true;
-            self::resetFailedAttempts(self::AUTH_FAILED_KEY);
-            return;
+        if ($headerPassword !== null) {
+            if (hash_equals($pw, $headerPassword)) {
+                $_SESSION['authenticated'] = true;
+                self::resetFailedAttempts(self::AUTH_FAILED_KEY);
+                return;
+            }
+            self::incrementFailedAttempts(self::AUTH_FAILED_KEY);
         }
 
         if (!empty($_SESSION['authenticated']) && $_SESSION['authenticated'] === true) {
@@ -123,6 +126,7 @@ final class AccessGuard
 
             $postedPw = (string)$_POST['password'];
             if (hash_equals($pw, $postedPw)) {
+                session_regenerate_id(true);
                 $_SESSION['authenticated'] = true;
                 self::resetFailedAttempts(self::AUTH_FAILED_KEY);
                 self::rotateCsrfToken(self::AUTH_CSRF_KEY);
@@ -133,26 +137,6 @@ final class AccessGuard
                 return;
             }
 
-            self::incrementFailedAttempts(self::AUTH_FAILED_KEY);
-            $captchaRequired = self::isCaptchaRequired(self::AUTH_FAILED_KEY);
-
-            echo $controller->handle('api_intro', [
-                'template' => 'password.html',
-                'settings' => $settings,
-                'error' => 'Wrong password',
-                'requireCaptcha' => $captchaRequired,
-                'csrfToken' => $_SESSION[self::AUTH_CSRF_KEY],
-            ]);
-            exit;
-        }
-
-        $requestPassword = array_key_exists('password', $_REQUEST) ? (string)$_REQUEST['password'] : null;
-        if ($requestPassword !== null && hash_equals($pw, $requestPassword)) {
-            $_SESSION['authenticated'] = true;
-            self::resetFailedAttempts(self::AUTH_FAILED_KEY);
-            return;
-        }
-        if ($requestPassword !== null) {
             self::incrementFailedAttempts(self::AUTH_FAILED_KEY);
             $captchaRequired = self::isCaptchaRequired(self::AUTH_FAILED_KEY);
 
@@ -228,6 +212,7 @@ final class AccessGuard
 
             $postedPw = (string)$_POST['password'];
             if (hash_equals($adminPassword, $postedPw)) {
+                session_regenerate_id(true);
                 $_SESSION['admin'] = true;
                 self::resetFailedAttempts(self::ADMIN_FAILED_KEY);
                 self::rotateCsrfToken(self::ADMIN_CSRF_KEY);
@@ -309,6 +294,7 @@ final class AccessGuard
     {
         return self::failedAttempts($failedKey) >= self::CAPTCHA_AFTER_FAILED;
     }
+
     public static function destroyCurrentSession(): void
     {
         if (session_status() !== PHP_SESSION_ACTIVE) {

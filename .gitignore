@@ -5,3 +5,4 @@ python/*.pem
 .idea
 composer.phar
 /vendor/
+docker-compose-wsl-dev.yml

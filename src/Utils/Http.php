@@ -9,34 +9,32 @@ class Http
 {
     public static function getUserIp(): string
     {
-        // Cloudflare header first, if present and valid
-        $cfIp = $_SERVER['HTTP_CF_CONNECTING_IP'] ?? null;
-        if (is_string($cfIp) && filter_var($cfIp, FILTER_VALIDATE_IP)) {
-            return $cfIp;
-        }
+        $remote = (string)($_SERVER['REMOTE_ADDR'] ?? '');
 
-        $client  = (string) ($_SERVER['HTTP_CLIENT_IP']       ?? '');
-        $forward = (string) ($_SERVER['HTTP_X_FORWARDED_FOR'] ?? '');
-        $remote  = (string) ($_SERVER['REMOTE_ADDR']          ?? '');
+        // Trust proxy-injected headers only when the TCP connection comes from a
+        // private/loopback address — i.e. the server sits behind a local reverse
+        // proxy. On direct connections every forwarded header is attacker-controlled.
+        $isPrivate = filter_var($remote, FILTER_VALIDATE_IP) !== false
+            && filter_var($remote, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) === false;
 
-        if ($forward !== '') {
-            $parts = array_map('trim', explode(',', $forward));
-            foreach ($parts as $part) {
-                if (filter_var($part, FILTER_VALIDATE_IP)) {
-                    return $part;
+        if ($isPrivate) {
+            $cfIp = $_SERVER['HTTP_CF_CONNECTING_IP'] ?? null;
+            if (is_string($cfIp) && filter_var($cfIp, FILTER_VALIDATE_IP)) {
+                return $cfIp;
+            }
+
+            $forward = (string)($_SERVER['HTTP_X_FORWARDED_FOR'] ?? '');
+            if ($forward !== '') {
+                $parts = array_map('trim', explode(',', $forward));
+                foreach ($parts as $part) {
+                    if (filter_var($part, FILTER_VALIDATE_IP)) {
+                        return $part;
+                    }
                 }
             }
         }
 
-        if (filter_var($client, FILTER_VALIDATE_IP)) {
-            return $client;
-        }
-
-        if (filter_var($remote, FILTER_VALIDATE_IP)) {
-            return $remote;
-        }
-
-        return '';
+        return filter_var($remote, FILTER_VALIDATE_IP) !== false ? $remote : '';
     }
 
     public static function isIpInRange(string $ip, string $range): bool
@@ -44,6 +42,10 @@ class Http
         if (str_contains($range, ',')) {
             $ranges = array_map('trim', explode(',', $range));
             return array_any($ranges, fn($singleRange) => self::isIpInRange($ip, $singleRange));
+        }
+
+        if (!str_contains($range, '/')) {
+            $range .= str_contains($range, ':') ? '/128' : '/32';
         }
 
         // Get mask bits

@@ -1,4 +1,9 @@
 # Changelog
+## 1.8.3
+- harden authentication and IP spoofing protections
+- fix CI branch trigger (main → master), add layer cache and concurrency
+- ignore docker-compose-wsl-dev.yml
+
 ## 1.8.2
 - Added logout Button
 - Update UIkit to 3.25.16
