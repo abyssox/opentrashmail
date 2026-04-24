@@ -1,4 +1,11 @@
 # Changelog
+## 1.8.2
+- Added logout Button
+- Update UIkit to 3.25.16
+- Update HTMX to 2.0.9
+- Update FontAwesome to 7.2.0
+- various code/styling improvements
+
 ## 1.8.1
 - Don't include xdebug in docker production build
 
