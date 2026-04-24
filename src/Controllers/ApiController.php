@@ -339,6 +339,8 @@ final class ApiController extends AbstractController
             }
 
             header('Content-Type: text/html; charset=UTF-8');
+            header('Content-Security-Policy: sandbox');
+            header('X-Content-Type-Options: nosniff');
             $parsed = isset($emailData['parsed']) && is_array($emailData['parsed']) ? $emailData['parsed'] : [];
 
             return (string) ($parsed['htmlbody'] ?? '');
@@ -369,9 +371,17 @@ final class ApiController extends AbstractController
         }
 
         $mime = mime_content_type($file) ?: 'application/octet-stream';
+        $unsafeMimeTypes = [
+            'text/html', 'text/javascript', 'application/javascript',
+            'image/svg+xml', 'text/xml', 'application/xml', 'application/xhtml+xml',
+        ];
+        if (in_array($mime, $unsafeMimeTypes, true)) {
+            $mime = 'application/octet-stream';
+        }
         header('Content-Type: ' . $mime);
+        header('X-Content-Type-Options: nosniff');
         header('Content-Length: ' . (string) filesize($file));
-        header('Content-Disposition: inline; filename="' . rawurlencode($attachment) . '"');
+        header('Content-Disposition: attachment; filename="' . rawurlencode($attachment) . '"');
 
         $content = file_get_contents($file);
         if ($content === false) {

@@ -127,7 +127,7 @@ $emails = isset($emails) && is_array($emails) ? $emails : [];
             var row = pendingDeleteBtn.closest('tr');
             modal.hide();
 
-            htmx.ajax('GET', url, {
+            htmx.ajax('POST', url, {
                 target: row,
                 swap: 'outerHTML swap:1s'
             });

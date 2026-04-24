@@ -219,10 +219,12 @@ $mailidNumeric = is_numeric($mailid) ? $mailid : '0';
             var targetEl = document.getElementById('emailbody');
             if (!targetEl) return;
 
-            htmx.ajax('GET', '/api/raw-html/<?= $emailEsc ?>/<?= $mailidEsc ?>', {
-                target: targetEl,
-                swap: 'innerHTML'
-            });
+            var iframe = document.createElement('iframe');
+            iframe.setAttribute('sandbox', '');
+            iframe.style.cssText = 'width:100%;border:0;min-height:400px;';
+            iframe.src = '/api/raw-html/' + <?= $emailJs ?> + '/' + <?= $mailidJs ?>;
+            targetEl.innerHTML = '';
+            targetEl.appendChild(iframe);
         });
     })();
 </script>

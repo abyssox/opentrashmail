@@ -21,15 +21,15 @@ class RandomEmail
         }
 
         $domain = $domains !== []
-            ? $domains[array_rand($domains)]
+            ? $domains[random_int(0, count($domains) - 1)]
             : 'example.com';
 
         if (str_contains($domain, '*')) {
-            $domain = str_replace('*', $nouns[array_rand($nouns)], $domain);
+            $domain = str_replace('*', $nouns[random_int(0, count($nouns) - 1)], $domain);
         }
 
-        $noun      = $nouns[array_rand($nouns)];
-        $adjective = $adjectives[array_rand($adjectives)];
+        $noun      = $nouns[random_int(0, count($nouns) - 1)];
+        $adjective = $adjectives[random_int(0, count($adjectives) - 1)];
 
         return sprintf('%s.%s@%s', $adjective, $noun, $domain);
     }

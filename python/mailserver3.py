@@ -1,5 +1,7 @@
 import aiohttp
 import asyncio
+import ipaddress
+import socket
 import ssl
 from aiosmtpd.controller import Controller
 from email.parser import BytesParser
@@ -41,6 +43,26 @@ WEBHOOK_URL: str = ""
 def ensure_dir(path: str, mode: int = 0o755) -> None:
     """Create a directory if it doesn't exist."""
     os.makedirs(path, mode=mode, exist_ok=True)
+
+
+def _is_safe_webhook_host(url: str) -> bool:
+    """Resolve the webhook URL host at request time to block DNS-rebinding attacks."""
+    try:
+        from urllib.parse import urlparse
+        host = urlparse(url).hostname
+        if not host:
+            return False
+        ip_str = socket.gethostbyname(host)
+        addr = ipaddress.ip_address(ip_str)
+        return not (
+            addr.is_private
+            or addr.is_loopback
+            or addr.is_link_local
+            or addr.is_reserved
+            or addr.is_unspecified
+        )
+    except Exception:
+        return False
 
 
 def safe_email_dir(email: str) -> str:
@@ -303,11 +325,19 @@ class CustomHandler:
             logger.error("No webhook URL configured for %s", email)
             return
 
+        if not _is_safe_webhook_host(webhook_url):
+            logger.error(
+                "Webhook URL %s resolved to a private/reserved address — blocked for %s",
+                webhook_url,
+                email,
+            )
+            return
+
         template = config.get("payload_template", "{}")
         payload_str = self.replace_template_variables(template, data)
 
         try:
-            payload = json.loads(payload_str)
+            json.loads(payload_str)
         except json.JSONDecodeError as e:
             logger.error(
                 "Invalid JSON in webhook payload template for %s: %s",
@@ -322,11 +352,12 @@ class CustomHandler:
         max_attempts = int(retry_config.get("max_attempts", 3))
         backoff_multiplier = float(retry_config.get("backoff_multiplier", 2))
 
-        headers = {"Content-Type": "application/json"}
+        payload_bytes = payload_str.encode("utf-8")
+        headers = {"Content-Type": "application/json; charset=utf-8"}
 
         secret_key = config.get("secret_key")
         if secret_key:
-            signature = self.sign_payload(json.dumps(payload, ensure_ascii=False), secret_key)
+            signature = self.sign_payload(payload_str, secret_key)
             if signature:
                 headers["X-Webhook-Signature"] = signature
 
@@ -336,7 +367,7 @@ class CustomHandler:
             try:
                 async with aiohttp.ClientSession(timeout=timeout) as session:
                     async with session.post(
-                        webhook_url, json=payload, headers=headers
+                        webhook_url, data=payload_bytes, headers=headers
                     ) as response:
                         if 200 <= response.status < 300:
                             logger.info(

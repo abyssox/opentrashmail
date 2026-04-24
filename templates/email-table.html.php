@@ -410,7 +410,7 @@ $colspanEmails = $isadmin ? 6 : 5;
                 row.id = tempId;
             }
 
-            htmx.ajax('GET', url, {
+            htmx.ajax('POST', url, {
                 target: '#' + tempId,
                 swap: 'outerHTML swap:1s'
             });

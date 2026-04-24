@@ -29,9 +29,9 @@ $dispatcher = cachedDispatcher(
         $r->addRoute('GET', '/api/raw-html/{email}/{id}', 'api_raw_html');
         $r->addRoute('GET', '/api/raw/{email}/{id}', 'api_raw');
         $r->addRoute('GET', '/api/attachment/{email}/{attachment}', 'api_attachment');
-        $r->addRoute('GET', '/api/delete/{email}/{id}', 'api_delete');
+        $r->addRoute('POST', '/api/delete/{email}/{id}', 'api_delete');
         $r->addRoute('GET', '/api/random', 'api_random');
-        $r->addRoute(['GET', 'POST'], '/api/deleteaccount/{email}', 'api_deleteaccount');
+        $r->addRoute('POST', '/api/deleteaccount/{email}', 'api_deleteaccount');
         $r->addRoute('GET', '/api/logs[/{lines}]', 'api_logs');
         $r->addRoute(['GET', 'POST'], '/api/admin', 'api_admin');
         $r->addRoute('GET', '/api/auth-actions[/]', 'api_auth_actions');
