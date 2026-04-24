@@ -1,6 +1,7 @@
 # Changelog
 ## 1.8.3
 - harden authentication and IP spoofing protections
+- remediate stored XSS, CSRF, DNS rebinding and hardening gaps
 - fix CI branch trigger (main → master), add layer cache and concurrency
 - ignore docker-compose-wsl-dev.yml
 
